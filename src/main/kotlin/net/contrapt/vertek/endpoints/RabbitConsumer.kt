@@ -1,17 +1,12 @@
 package net.contrapt.vertx.endpoints
 
 import com.rabbitmq.client.ConnectionFactory
-import io.vertx.core.AbstractVerticle
 import io.vertx.core.AsyncResult
-import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
-import io.vertx.core.logging.LoggerFactory
 import io.vertx.groovy.rabbitmq.RabbitMQClient_GroovyExtension.basicAck
 import io.vertx.groovy.rabbitmq.RabbitMQClient_GroovyExtension.basicNack
-import net.contrapt.vertx.plugs.MessagePlug
-import net.contrapt.vertx.plugs.Plug
 
 /**
  * Represents the configuration of a message bus endpoint that we would like to
@@ -28,15 +23,11 @@ abstract class RabbitConsumer(
     val autoAck: Boolean = true,
     val prefetchLimit: Int = 0,
     val consumers: Int = 1
-) : AbstractVerticle(), Handler<Message<JsonObject>> {
+) : AbstractConsumer(), Handler<Message<JsonObject>> {
 
     lateinit var client : RabbitClient
 
-    protected val plugs = mutableListOf<MessagePlug>()
-
-    val logger = LoggerFactory.getLogger(javaClass)
-
-    override fun start() {
+    final override fun start() {
         client = RabbitClient.create(vertx, connectionFactory)
         client.start(startupHandler(client))
     }
@@ -45,7 +36,6 @@ abstract class RabbitConsumer(
         when (async.succeeded()) {
             true -> {
                 logger.info("Rabbit client connected")
-                addPlugs()
                 client.queueDeclare(queue, durable, exclusive, autoDelete, bindQueue())
                 startInternal()
             }
@@ -61,49 +51,23 @@ abstract class RabbitConsumer(
     }
 
     /**
-     * Handle the incoming [message] by first applying [Plug]s then executing this classes [handleMessage].  Any
-     * unhandled exceptions will result in message being nacked if [autoAck] is not set
-     */
-    final override fun handle(message: Message<JsonObject>) {
-        // TODO What if you want a transaction around message handling?
-        // TODO How would you implement aggregation, and maybe other EIPs?
-        vertx.executeBlocking(Handler<Future<Nothing>> { future ->
-            try{
-                processInbound(message)
-                handleMessage(message)
-                future.complete()
-            }
-            catch (e: Exception) {
-                // TODO Exception handler?
-                future.fail(e)
-            }
-        }, false, Handler<AsyncResult<Nothing>> {ar ->
-            if ( ar.failed() ) basicNack(message, ar.cause())
-            else basicAck(message)
-        })
-    }
-
-    private fun processInbound(message: Message<JsonObject>) {
-        plugs.forEach {
-            it.process(message)
-        }
-    }
-
-    /**
      * Override this method to start any additional consumers, timers etc when this consumer starts
      */
     abstract fun startInternal()
 
     /**
-     * Override this method to implement the main [Message] handling code for this consumer
+     * Default failure handling does [basicNack] of the message
      */
-    abstract fun handleMessage(message: Message<JsonObject>)
+    override fun handleFailure(message: Message<JsonObject>, cause: Throwable) {
+        basicNack(message, cause)
+    }
 
     /**
-     * Override this method to add [Plug]s to this consumer.  They will be applied to the incoming [Message] in order
-     * before the message is sent to [handleMessage]
+     * Default success handling does [basicAck] if necessary
      */
-    open fun addPlugs() {}
+    override fun handleSuccess(message: Message<JsonObject>) {
+        basicAck(message)
+    }
 
     /**
      * Send [basicAck] if this consumer is not set to [autoAck]
