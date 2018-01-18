@@ -1,7 +1,7 @@
 package net.contrapt.vertx.endpoints
 
 import com.rabbitmq.client.*
-import org.slf4j.LoggerFactory
+import io.vertx.core.logging.LoggerFactory
 import java.lang.Thread.sleep
 
 /**

@@ -18,7 +18,7 @@ import java.util.function.BiConsumer
 
 class RabbitClient private constructor(val vertx: Vertx, private val connection: RabbitClientConnection) {
 
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     var includeProperties = true
 
@@ -26,21 +26,37 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
     private lateinit var publishChannel: Channel
     private val consumerChannels = mutableMapOf<String, Channel>()
 
-    fun start(resultHandler: Handler<AsyncResult<Unit>>) {
-        log.info("Starting rabbitmq client")
+    fun start(successHandler: () -> Unit) {
+        logger.info("Starting rabbitmq client")
         vertx.executeBlocking(Handler<Future<Unit>> { future ->
             try {
                 connect()
                 future.complete()
             } catch (e: Exception) {
-                log.error("Could not connect to rabbitmq", e)
+                logger.error("Could not connect to rabbitmq", e)
                 future.fail(e)
             }
-        }, resultHandler)
+        }, startHandler(successHandler))
+    }
+
+    private fun startHandler(successHandler: () -> Unit) = Handler<AsyncResult<Unit>> { async ->
+        when (async.succeeded()) {
+            true -> {
+                successHandler()
+            }
+            false -> {
+                logger.warn("Unable to connect to rabbit", async.cause())
+                logger.warn("Trying again in 10s")
+                vertx.setTimer(10000, {
+                    logger.info("Trying again")
+                    start(successHandler)
+                })
+            }
+        }
     }
 
     fun stop(resultHandler: Handler<AsyncResult<Unit>>) {
-        log.info("Stopping rabbitmq client")
+        logger.info("Stopping rabbitmq client")
         vertx.executeBlocking(Handler<Future<Unit>> { future ->
             try {
                 disconnect()
@@ -83,7 +99,7 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
         if ( ar.succeeded() ) {
             vertx.eventBus().send(address, ar.result())
         } else {
-            log.error("Exception occurred inside rabbitmq service consumer.", ar.cause())
+            logger.error("Exception occurred inside rabbitmq service consumer.", ar.cause())
         }
     }
 
@@ -222,21 +238,21 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
     }
 
     private fun connect() {
-        log.debug("Connecting to rabbitmq...")
+        logger.debug("Connecting to rabbitmq...")
         defaultChannel = connection.createChannel()
         publishChannel = connection.createChannel()
-        log.debug("Connected to rabbitmq !")
+        logger.debug("Connected to rabbitmq !")
     }
 
     private fun disconnect() {
         try {
-            log.debug("Disconnecting from rabbitmq...")
+            logger.debug("Disconnecting from rabbitmq...")
             // This will close all consumerChannels related to this connection
             defaultChannel.close()
             publishChannel.close()
             consumerChannels.forEach { it.value.close() }
             connection.close()
-            log.debug("Disconnected from rabbitmq !")
+            logger.debug("Disconnected from rabbitmq !")
         } finally {
             consumerChannels.clear()
         }

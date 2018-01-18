@@ -29,25 +29,11 @@ abstract class RabbitConsumer(
 
     final override fun start() {
         client = RabbitClient.create(vertx, connectionFactory)
-        client.start(startupHandler(client))
-    }
-
-    fun startupHandler(client: RabbitClient)= Handler<AsyncResult<Unit>> { async->
-        when (async.succeeded()) {
-            true -> {
-                logger.info("Rabbit client connected")
-                client.queueDeclare(queue, durable, exclusive, autoDelete, bindQueue())
-                startInternal()
-            }
-            false -> {
-                logger.warn("Unable to connect to rabbit", async.cause())
-                logger.warn("Trying again in 10s")
-                vertx.setTimer(10000, {
-                    logger.info("Trying again")
-                    start()
-                })
-            }
-        }
+        client.start({
+            logger.info("Rabbit client connected")
+            client.queueDeclare(queue, durable, exclusive, autoDelete, bindQueue())
+            startInternal()
+        })
     }
 
     /**

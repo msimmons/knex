@@ -5,6 +5,7 @@ import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
+import io.vertx.groovy.rabbitmq.RabbitMQClient_GroovyExtension.basicPublish
 
 /**
  * Represents the configuration of a message bus endpoint that we would like to
@@ -21,24 +22,10 @@ abstract class RabbitProducer (
 
     final override fun start() {
         client = RabbitClient.create(vertx, connectionFactory)
-        client.start(startupHandler())
-    }
-
-    fun startupHandler() = Handler<AsyncResult<Unit>> { async->
-        when (async.succeeded()) {
-            true -> {
-                logger.info("Rabbit client connected")
-                logger.info("Publishing address $address -> $exchange:$routingKey")
-            }
-            false -> {
-                logger.warn("Unable to connect to rabbit", async.cause())
-                logger.warn("Trying again in 10s")
-                vertx.setTimer(10000, {
-                    logger.info("Trying again")
-                    start()
-                })
-            }
-        }
+        client.start({
+            logger.info("Rabbit client connected")
+            logger.info("Publishing address $address -> $exchange:$routingKey")
+        })
     }
 
     override fun handleMessage(message: Message<JsonObject>): JsonObject {
