@@ -20,7 +20,9 @@ dependencies {
     compile "io.vertx:vertx-core:$vertx_version"
     compile "io.vertx:vertx-web:$vertx_version"
     compile "io.vertx:vertx-rabbitmq-client:$vertx_version"
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+
+    testCompile "junit:junit:4.12"
+    testCompile "io.vertx:vertx-unit:$vertx_version"
 }
 
 task wrapper(type:Wrapper) {
