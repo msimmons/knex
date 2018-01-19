@@ -9,8 +9,7 @@ import io.vertx.groovy.rabbitmq.RabbitMQClient_GroovyExtension.basicAck
 import io.vertx.groovy.rabbitmq.RabbitMQClient_GroovyExtension.basicNack
 
 /**
- * Represents the configuration of a message bus endpoint that we would like to
- * subscribe to
+ * Consume messages routed by the rabbit broker
  */
 abstract class RabbitConsumer(
     val connectionFactory: ConnectionFactory,
@@ -22,7 +21,8 @@ abstract class RabbitConsumer(
     val autoDelete: Boolean = false,
     val autoAck: Boolean = true,
     val prefetchLimit: Int = 0,
-    val consumers: Int = 1
+    val consumers: Int = 1,
+    val args: Map<String,Any> = mapOf()
 ) : AbstractConsumer(), Handler<Message<JsonObject>> {
 
     lateinit var client : RabbitClient
@@ -31,8 +31,8 @@ abstract class RabbitConsumer(
         client = RabbitClient.create(vertx, connectionFactory)
         client.start({
             logger.info("Rabbit client connected")
-            client.queueDeclare(queue, durable, exclusive, autoDelete, bindQueue())
             startInternal()
+            client.queueDeclare(queue, durable, exclusive, autoDelete, args, bindQueue())
         })
     }
 
@@ -89,14 +89,14 @@ abstract class RabbitConsumer(
      */
     private fun bindQueue() = Handler<AsyncResult<JsonObject>> { async ->
         if( async.failed() ) throw IllegalStateException("Failed to declare queue $queue", async.cause())
-        client.queueBind(queue, exchange, routingKey, setupConsumer())
+        client.queueBind(queue, exchange, routingKey, startConsumers())
     }
 
     /**
      * Setup this consumer's [basicConsume]rs on rabbit as well as the [EventBus] consumer that will handle incoming
      * messages
      */
-    private fun setupConsumer() = Handler<AsyncResult<Unit>> { async ->
+    private fun startConsumers() = Handler<AsyncResult<Unit>> { async ->
         if ( async.failed() ) throw IllegalStateException("Failed to bind queue $exchange:$routingKey -> $queue", async.cause())
         // Basic consumes bridges rabbit message to the event bus
         (1..consumers).forEach {

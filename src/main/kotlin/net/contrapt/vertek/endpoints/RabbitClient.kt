@@ -187,9 +187,9 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
         })
     }
 
-    fun queueDeclare(queue: String, durable: Boolean, exclusive: Boolean, autoDelete: Boolean, resultHandler: Handler<AsyncResult<JsonObject>>) {
+    fun queueDeclare(queue: String, durable: Boolean, exclusive: Boolean, autoDelete: Boolean, args: Map<String,Any>, resultHandler: Handler<AsyncResult<JsonObject>>) {
         withChannel(defaultChannel, resultHandler, { c ->
-            val result = c.queueDeclare(queue, durable, exclusive, autoDelete, null)
+            val result = c.queueDeclare(queue, durable, exclusive, autoDelete, args)
             toJson(result) as JsonObject
         })
     }
@@ -424,4 +424,3 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
         fun create(vertx: Vertx, connectionFactory: ConnectionFactory): RabbitClient = RabbitClient(vertx, RabbitClientConnection(connectionFactory))
     }
 }
-
