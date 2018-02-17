@@ -11,6 +11,9 @@ buildscript {
 subprojects {
     apply plugin: 'kotlin'
 
+    group = 'net.contrapt.vertek'
+    version = library_version
+
     jar {
         baseName = "vertek-${project.name}"
     }
