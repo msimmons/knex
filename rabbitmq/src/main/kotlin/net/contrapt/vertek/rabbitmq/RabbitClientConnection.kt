@@ -1,4 +1,4 @@
-package net.contrapt.vertx.endpoints
+package net.contrapt.vertek.rabbitmq
 
 import com.rabbitmq.client.*
 import io.vertx.core.logging.LoggerFactory

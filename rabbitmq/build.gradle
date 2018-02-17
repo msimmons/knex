@@ -1,0 +1,4 @@
+dependencies {
+    compile project(":core")
+    compile "com.rabbitmq:amqp-client:$rabbitmq_version"
+}

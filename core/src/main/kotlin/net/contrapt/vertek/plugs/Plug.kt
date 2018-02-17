@@ -1,4 +1,4 @@
-package net.contrapt.vertx.plugs
+package net.contrapt.vertek.plugs
 
 interface Plug<T> {
 

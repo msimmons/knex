@@ -1,11 +1,12 @@
-package net.contrapt.vertx.endpoints
+package net.contrapt.vertek.rabbitmq
 
 import com.rabbitmq.client.ConnectionFactory
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
-import io.vertx.groovy.rabbitmq.RabbitMQClient_GroovyExtension.basicPublish
+
+import net.contrapt.vertek.endpoints.AbstractProducer
 
 /**
  * Represents the configuration of a message bus endpoint that we would like to

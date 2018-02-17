@@ -11,8 +11,8 @@ import io.vertx.ext.web.handler.sockjs.SockJSHandler
 import io.vertx.kotlin.ext.web.handler.sockjs.BridgeOptions
 import io.vertx.kotlin.ext.web.handler.sockjs.PermittedOptions
 import io.vertx.kotlin.ext.web.handler.sockjs.SockJSHandlerOptions
-import net.contrapt.vertx.endpoints.WebSocketConsumer
-import net.contrapt.vertx.plugs.BridgeEventPlug
+import net.contrapt.vertek.endpoints.WebSocketConsumer
+import net.contrapt.vertek.plugs.BridgeEventPlug
 
 class WebSocketRouter(
     val port: Int,

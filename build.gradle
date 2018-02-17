@@ -8,29 +8,32 @@ buildscript {
     }
 }
 
-apply plugin: 'kotlin'
+subprojects {
+    apply plugin: 'kotlin'
 
-repositories {
-    jcenter()
-}
+    jar {
+        baseName = "vertek-${project.name}"
+    }
+    repositories {
+        jcenter()
+    }
 
-dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
-    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-    compile "io.vertx:vertx-core:$vertx_version"
-    compile "io.vertx:vertx-web:$vertx_version"
-    compile "io.vertx:vertx-rabbitmq-client:$vertx_version"
+    dependencies {
+        compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+        compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
-    testCompile "junit:junit:4.12"
-    testCompile "io.vertx:vertx-unit:$vertx_version"
+        testCompile "junit:junit:4.12"
+        testCompile "io.vertx:vertx-unit:$vertx_version"
+    }
+
+
+    compileKotlin {
+        kotlinOptions {
+            jvmTarget = '1.8'
+        }
+    }
 }
 
 task wrapper(type:Wrapper) {
-    gradleVersion='4.2'
-}
-
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
+    gradleVersion=gradle_version
 }

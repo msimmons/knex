@@ -1,4 +1,4 @@
-package net.contrapt.vertx.endpoints
+package net.contrapt.vertek.endpoints
 
 import io.vertx.core.Handler
 import io.vertx.core.eventbus.Message

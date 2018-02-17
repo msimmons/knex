@@ -1,4 +1,4 @@
-package net.contrapt.vertx.endpoints
+package net.contrapt.vertek.endpoints
 
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.AsyncResult
@@ -7,8 +7,8 @@ import io.vertx.core.Handler
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
-import net.contrapt.vertx.plugs.MessagePlug
-import net.contrapt.vertx.plugs.Plug
+import net.contrapt.vertek.plugs.MessagePlug
+import net.contrapt.vertek.plugs.Plug
 
 /**
  * A consumer of messages.  Concrete subclasses define where these messages are coming from, such as a message broker,

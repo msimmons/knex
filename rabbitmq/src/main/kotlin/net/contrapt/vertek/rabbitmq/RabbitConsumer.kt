@@ -1,12 +1,12 @@
-package net.contrapt.vertx.endpoints
+package net.contrapt.vertek.rabbitmq
 
 import com.rabbitmq.client.ConnectionFactory
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
-import io.vertx.groovy.rabbitmq.RabbitMQClient_GroovyExtension.basicAck
-import io.vertx.groovy.rabbitmq.RabbitMQClient_GroovyExtension.basicNack
+
+import net.contrapt.vertek.endpoints.AbstractConsumer
 
 /**
  * Consume messages routed by the rabbit broker
