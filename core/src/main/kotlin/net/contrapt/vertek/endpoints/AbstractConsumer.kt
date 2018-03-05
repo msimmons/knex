@@ -11,14 +11,28 @@ import net.contrapt.vertek.plugs.MessagePlug
 import net.contrapt.vertek.plugs.Plug
 
 /**
- * A consumer of messages.  Concrete subclasses define where these messages are coming from, such as a message broker,
- * web socket connection etc.
+ * A consumer of messages.  Concrete subclasses define message handling in [handleMessage] and provide a
+ * [ConsumerConnector] which implements the particular external transport.  Subclasses can also provide
+ * [MessagePlug]'s for pipeline processing and [ExceptionHandler]'s for defining exception behaviour
  */
 abstract class AbstractConsumer(
+        val connector: ConsumerConnector
 ) : AbstractVerticle(), Handler<Message<JsonObject>> {
 
     private val plugs = mutableListOf<MessagePlug>()
     val logger = LoggerFactory.getLogger(javaClass)
+
+    final override fun start(future: Future<Void>) {
+        connector.start(vertx, this, Handler {
+            startInternal()
+            future.complete()
+        })
+    }
+
+    /**
+     * Override to define additional startup code
+     */
+    open fun startInternal() {}
 
     /**
      * Add a [MessagePlug] to the inbound processing stream.  Plugs are executed in the order they are added
@@ -41,12 +55,12 @@ abstract class AbstractConsumer(
                 future.complete()
             }
             catch (e: Exception) {
-                // TODO Exception handlers?
+                // TODO Exception handlers
                 future.fail(e)
             }
         }, false, Handler<AsyncResult<Nothing>> {ar ->
-            if ( ar.failed() ) handleFailure(message, ar.cause())
-            else handleSuccess(message)
+            if ( ar.failed() ) connector.handleFailure(message, ar.cause())
+            else connector.handleSuccess(message)
         })
     }
 
@@ -60,19 +74,5 @@ abstract class AbstractConsumer(
      * Override this method to implement the main [Message] handling code for this consumer
      */
     abstract fun handleMessage(message: Message<JsonObject>)
-
-    /**
-     * Override this method to implement message handler failure code
-     * Default implementation does nothing
-     */
-    open fun handleFailure(message: Message<JsonObject>, cause: Throwable) {
-    }
-
-    /**
-     * Override this method to implement message handler success
-     * Default implementation does nothing
-     */
-    open fun handleSuccess(message: Message<JsonObject>) {
-    }
 
 }

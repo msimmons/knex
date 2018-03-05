@@ -2,52 +2,52 @@ package net.contrapt.vertek.rabbitmq
 
 import com.rabbitmq.client.ConnectionFactory
 import io.vertx.core.AsyncResult
+import io.vertx.core.Future
 import io.vertx.core.Handler
+import io.vertx.core.Vertx
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
-
-import net.contrapt.vertek.endpoints.AbstractProducer
+import io.vertx.core.logging.LoggerFactory
+import net.contrapt.vertek.endpoints.ProducerConnector
 
 /**
  * Represents the configuration of a message bus endpoint that we would like to
  * send a message to
  */
-abstract class RabbitProducer (
+abstract class RabbitProducerConnector(
     val connectionFactory: ConnectionFactory,
-    address: String,
+    override val address: String,
     val exchange: String,
     val routingKey: String
-) : AbstractProducer(address) {
+) : ProducerConnector {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     lateinit var client : RabbitClient
 
-    final override fun start() {
+    final override fun start(vertx: Vertx, handler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
         client = RabbitClient.create(vertx, connectionFactory)
         client.start({
             logger.info("Rabbit client connected")
             logger.info("Publishing address $address -> $exchange:$routingKey")
+            vertx.eventBus().consumer<JsonObject>(address, handler)
+            startHandler.handle(Future.succeededFuture())
         })
     }
 
-    override fun handleMessage(message: Message<JsonObject>): JsonObject {
-        val body = message.body().getString("body")
-        val properties = message.body().getJsonObject("properties") ?: JsonObject()
-        return JsonObject().put("body", body).put("properties", properties)
-    }
-
     override fun handleFailure(message: Message<JsonObject>, cause: Throwable) {
-        super.handleFailure(message, cause)
+        throw RuntimeException("Unable to publish message", cause)
     }
 
-    override fun handleSuccess(message: JsonObject) {
+    override fun handleSuccess(message: Message<JsonObject>) {
         basicPublish(message)
     }
 
     /**
      * Invoke [basicPublish] to publish the message to rabbit
      */
-    private fun basicPublish(message: JsonObject) {
-        client.basicPublish(exchange, routingKey, message, Handler<AsyncResult<Unit>> {ar ->
+    private fun basicPublish(message: Message<JsonObject>) {
+        client.basicPublish(exchange, routingKey, message.body(), Handler<AsyncResult<Unit>> {ar ->
             if ( ar.cause() != null ) logger.error("Error publishing message: $message", ar.cause())
         })
     }

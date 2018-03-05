@@ -12,18 +12,29 @@ import net.contrapt.vertek.plugs.MessagePlug
 import net.contrapt.vertek.plugs.Plug
 
 /**
- * A producer of messages.  Concrete subclasses define where the messages are going, such as message queue system, web
- * socket
+ * A producer of messages via the [send] methods.  The [ProducerConnector] defines the external publishing
+ * system.  Subclasses of [AbstractProducer] define the message handling in [handleMessage] and can add
+ * [MessagePlug]s for pipeline processing and [ExceptionHandler]s
  */
 abstract class AbstractProducer(
-    val address: String
+        val connector: ProducerConnector
 ) : AbstractVerticle(), Handler<Message<JsonObject>> {
 
-    val logger = LoggerFactory.getLogger(javaClass)
+    protected val logger = LoggerFactory.getLogger(javaClass)
     private val plugs = mutableListOf<MessagePlug>()
 
-    init {
-        vertx.eventBus().consumer(address, this)
+    final override fun start(future: Future<Void>) {
+        connector.start(vertx, this, Handler {
+            startupInternal()
+            future.complete()
+        })
+    }
+
+    /**
+     * Subclasses can override this to provide initialization.  It is called after the
+     * [Connector] has started
+     */
+    open fun startupInternal() {
     }
 
     /**
@@ -33,19 +44,21 @@ abstract class AbstractProducer(
         plugs.add(plug)
     }
 
+    /** Default async handler for event bus send */
+    private val defaultHandler = Handler<AsyncResult<Message<JsonObject>>> {}
+
     /**
-     * Publishes the given [Message] on the event bus
+     * Publishes the given [Message] on the [EventBus].  Contents of message body are [Connector] specific
      */
-    fun publish(message: Message<JsonObject>) {
-        vertx.eventBus().publish(address, message.body(), DeliveryOptions().setHeaders(message.headers()))
+    fun send(message: Message<JsonObject>, handler: Handler<AsyncResult<Message<JsonObject>>> = defaultHandler) {
+        vertx.eventBus().send(connector.address, message.body(), DeliveryOptions().setHeaders(message.headers()), handler)
     }
 
     /**
-     * Publishes the given object as a [Message]
+     * Publishes the given [JsonObject] body as a [Message] on the [EventBus]
      */
-    fun publish(body: JsonObject, properties: JsonObject = JsonObject()) {
-        val message = JsonObject().put("body", body.encode()).put("properties", properties)
-        vertx.eventBus().publish(address, message, DeliveryOptions())
+    fun send(body: JsonObject, handler: Handler<AsyncResult<Message<JsonObject>>> = defaultHandler) {
+        vertx.eventBus().send(connector.address, body, DeliveryOptions(), handler)
     }
 
     /**
@@ -53,39 +66,30 @@ abstract class AbstractProducer(
      * be published
      */
     final override fun handle(message : Message<JsonObject>) {
-        vertx.executeBlocking(Handler<Future<JsonObject>> { future ->
+        vertx.executeBlocking(Handler<Future<Nothing>> { future ->
             try {
+                handleMessage(message)
                 processOutbound(message)
-                val jsonObject = handleMessage(message)
-                future.complete(jsonObject)
+                future.complete()
             }
             catch (e: Exception) {
+                //TODO add exception handlers
                 future.fail(e)
             }
-        }, false, Handler<AsyncResult<JsonObject>> {ar ->
-            if ( ar.failed() ) handleFailure(message, ar.cause())
-            else handleSuccess(ar.result())
+        }, false, Handler<AsyncResult<Nothing>> {ar ->
+            if ( ar.failed() ) connector.handleFailure(message, ar.cause())
+            else connector.handleSuccess(message)
         })
     }
 
-    abstract fun handleMessage(message: Message<JsonObject>) : JsonObject
-
     /**
-     * Override this method to handle failure in publishing.  By default it throws a [RuntimeException]
+     * Do any processing of the message before the [ProducerConnector] publishes the message
      */
-    open fun handleFailure(message: Message<JsonObject>, cause: Throwable) {
-        throw RuntimeException("Unable to publish message", cause)
-    }
+    abstract fun handleMessage(message: Message<JsonObject>)
 
     /**
-     * Override this method to handle success -- by default it does nothing
-     */
-    open fun handleSuccess(message: JsonObject) {
-    }
-
-    /**
-     * Apply plugs to the given [message] in the order they were added.  This happens before the outgoing message
-     * is assembled and sent to the [EventBus]
+     * Apply plugs to the given [Message] in the order they were added.  This happens after the outgoing message
+     * is processed by [handleMessage] and right before the [ProducerConnector] publishes
      */
     private fun processOutbound(message: Message<JsonObject>) {
         plugs.forEach {

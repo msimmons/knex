@@ -2,16 +2,18 @@ package net.contrapt.vertek.rabbitmq
 
 import com.rabbitmq.client.ConnectionFactory
 import io.vertx.core.AsyncResult
+import io.vertx.core.Future
 import io.vertx.core.Handler
+import io.vertx.core.Vertx
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
-
-import net.contrapt.vertek.endpoints.AbstractConsumer
+import io.vertx.core.logging.LoggerFactory
+import net.contrapt.vertek.endpoints.ConsumerConnector
 
 /**
  * Consume messages routed by the rabbit broker
  */
-abstract class RabbitConsumer(
+class RabbitConsumerConnector(
     val connectionFactory: ConnectionFactory,
     val exchange: String,
     val routingKey: String,
@@ -23,23 +25,34 @@ abstract class RabbitConsumer(
     val prefetchLimit: Int = 0,
     val consumers: Int = 1,
     val args: Map<String,Any> = mapOf()
-) : AbstractConsumer(), Handler<Message<JsonObject>> {
+) : ConsumerConnector {
 
     lateinit var client : RabbitClient
+    lateinit var vertx: Vertx
+    lateinit var handler: Handler<Message<JsonObject>>
+    lateinit var startup: Handler<AsyncResult<Unit>>
 
-    final override fun start() {
+    override val address = queue
+
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+    final override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, startupHandler: Handler<AsyncResult<Unit>>) {
+        this.vertx = vertx
+        this.handler = messageHandler
+        this.startup = startupHandler
         client = RabbitClient.create(vertx, connectionFactory)
         client.start({
             logger.info("Rabbit client connected")
-            startInternal()
             client.queueDeclare(queue, durable, exclusive, autoDelete, args, bindQueue())
         })
     }
 
     /**
-     * Override this method to start any additional consumers, timers etc when this consumer starts
+     * Simple utility to publish a message
      */
-    abstract fun startInternal()
+    fun send(message: JsonObject, handler: Handler<AsyncResult<Unit>>) {
+        client.basicPublish(exchange, routingKey, message, handler)
+    }
 
     /**
      * Default failure handling does [basicNack] of the message
@@ -98,18 +111,24 @@ abstract class RabbitConsumer(
      */
     private fun startConsumers() = Handler<AsyncResult<Unit>> { async ->
         if ( async.failed() ) throw IllegalStateException("Failed to bind queue $exchange:$routingKey -> $queue", async.cause())
+        // Event bus consumer will pick up the bridged message using the handler provided
+        vertx.eventBus().consumer(queue, handler)
         // Basic consumes bridges rabbit message to the event bus
         (1..consumers).forEach {
             client.basicConsume(queue, queue, autoAck, prefetchLimit, Handler<AsyncResult<String>> { ar -> handleConsumer(ar)})
         }
-        // Event bus consumer will pick up the bridged message -- the handler is this concrete subclass
-        vertx.eventBus().consumer(queue, this)
     }
 
     private fun handleConsumer(ar: AsyncResult<String>) {
         when ( ar.succeeded() ) {
-            true -> logger.info("Listening to $exchange:$routingKey -> $queue [${ar.result()}]")
-            else -> logger.error("Failed to setup consumer $exchange:$routingKey -> $queue", ar.cause())
+            true -> {
+                logger.info("Listening to $exchange:$routingKey -> $queue [${ar.result()}]")
+                startup.handle(Future.succeededFuture())
+            }
+            else -> {
+                logger.error("Failed to setup consumer $exchange:$routingKey -> $queue", ar.cause())
+                startup.handle(Future.failedFuture(ar.cause()))
+            }
         }
     }
 

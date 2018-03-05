@@ -1,4 +1,4 @@
-package net.contrapt.vertek.endpoints
+package net.contrapt.vertek.endpoints.ws
 
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Handler
@@ -11,7 +11,6 @@ import io.vertx.ext.web.handler.sockjs.SockJSHandler
 import io.vertx.kotlin.ext.web.handler.sockjs.BridgeOptions
 import io.vertx.kotlin.ext.web.handler.sockjs.PermittedOptions
 import io.vertx.kotlin.ext.web.handler.sockjs.SockJSHandlerOptions
-import net.contrapt.vertek.endpoints.WebSocketConsumer
 import net.contrapt.vertek.plugs.BridgeEventPlug
 
 class WebSocketRouter(
@@ -58,7 +57,7 @@ class WebSocketRouter(
     }
 
     private fun preHandler() = Handler<RoutingContext> { context ->
-        logger.info("preHandler for ${context.normalisedPath()} ${context.parsedHeaders()}")
+        logger.debug("preHandler for ${context.normalisedPath()} ${context.parsedHeaders()}")
         context.next()
     }
 
@@ -68,10 +67,12 @@ class WebSocketRouter(
             BridgeEventType.RECEIVE -> processOutbound(event)
             BridgeEventType.SEND -> processInbound(event)
             BridgeEventType.PUBLISH -> processInbound(event)
-            else -> logger.info("${event.type()} ${event.socket().headers().entries()} ${event.rawMessage?.encode()}")
+            else -> logger.debug("${event.type()} ${event.socket().headers().entries()} ${event.rawMessage?.encode()}")
         }
+        /*
         val wsKey = event.socket().headers()["Sec-WebSocket-Key"]
         event.rawMessage?.getJsonObject("headers")?.put("wsKey", wsKey)
+        */
         event.complete(true)
     }
 
