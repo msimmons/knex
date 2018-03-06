@@ -25,14 +25,21 @@ abstract class RabbitProducerConnector(
 
     lateinit var client : RabbitClient
 
-    final override fun start(vertx: Vertx, handler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
+    final override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
         client = RabbitClient.create(vertx, connectionFactory)
-        client.start({
+        client.start(clientStartupHandler(vertx, messageHandler, startHandler))
+    }
+
+    private fun clientStartupHandler(vertx: Vertx, handler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) = Handler<AsyncResult<Unit>> { ar ->
+        if ( ar.succeeded() ) {
             logger.info("Rabbit client connected")
             logger.info("Publishing address $address -> $exchange:$routingKey")
             vertx.eventBus().consumer<JsonObject>(address, handler)
             startHandler.handle(Future.succeededFuture())
-        })
+        }
+        else {
+            startHandler.handle(Future.failedFuture(ar.cause()))
+        }
     }
 
     override fun handleFailure(message: Message<JsonObject>, cause: Throwable) {

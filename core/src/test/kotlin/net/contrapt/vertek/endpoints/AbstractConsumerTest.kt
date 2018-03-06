@@ -35,8 +35,8 @@ class AbstractConsumerTest {
 
     @Test
     fun testSuccess(context: TestContext) {
-        rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){ id ->
-            connector.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() { it ->
+        rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
+            connector.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() {
                 context.assertEquals(1, connector.successfulMessages.size)
             })
         })
@@ -44,8 +44,8 @@ class AbstractConsumerTest {
 
     @Test
     fun testFailure(context: TestContext) {
-        rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){ id ->
-            connector.send(JsonObject().put("key", "failure"), context.asyncAssertSuccess() { it ->
+        rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
+            connector.send(JsonObject().put("key", "failure"), context.asyncAssertSuccess() {
                 context.assertEquals(1, connector.failedMessages.size)
             })
         })
@@ -54,8 +54,8 @@ class AbstractConsumerTest {
     @Test
     fun testPlug(context: TestContext) {
         consumer.addPlug(TestPlug())
-        rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){ id ->
-            connector.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() { it ->
+        rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
+            connector.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() {
                 context.assertEquals(1, connector.successfulMessages.size)
                 context.assertTrue(connector.successfulMessages[0].body().containsKey("plug"))
             })

@@ -27,24 +27,81 @@ class RabbitConsumerConnector(
     val args: Map<String,Any> = mapOf()
 ) : ConsumerConnector {
 
-    lateinit var client : RabbitClient
-    lateinit var vertx: Vertx
-    lateinit var handler: Handler<Message<JsonObject>>
-    lateinit var startup: Handler<AsyncResult<Unit>>
+    private lateinit var client : RabbitClient
+    private lateinit var vertx: Vertx
+    private lateinit var messageHandler: Handler<Message<JsonObject>>
+    private lateinit var startHandler: Handler<AsyncResult<Unit>>
 
     override val address = queue
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    final override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, startupHandler: Handler<AsyncResult<Unit>>) {
+    override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
         this.vertx = vertx
-        this.handler = messageHandler
-        this.startup = startupHandler
+        this.messageHandler = messageHandler
+        this.startHandler = startHandler
         client = RabbitClient.create(vertx, connectionFactory)
-        client.start({
-            logger.info("Rabbit client connected")
+        client.start(clientStartupHandler())
+    }
+
+    /**
+     * Handler for [RabbitClient] startup --
+     */
+    private fun clientStartupHandler() = Handler<AsyncResult<Unit>> { ar ->
+        if ( ar.succeeded() ) {
+            logger.info("Rabbit client connected at ${connectionFactory.host}")
             client.queueDeclare(queue, durable, exclusive, autoDelete, args, bindQueue())
-        })
+        }
+        else {
+            startHandler.handle(Future.failedFuture(ar.cause()))
+        }
+    }
+
+    /**
+     * Bind this consumer's [queue] to it's [exchange] and [routingKey]
+     */
+    private fun bindQueue() = Handler<AsyncResult<JsonObject>> { ar ->
+        if( ar.failed() ) {
+            logger.error(ar.cause())
+            startHandler.handle(Future.failedFuture(ar.cause()))
+        }
+        else {
+            client.queueBind(queue, exchange, routingKey, startConsumers())
+        }
+    }
+
+    /**
+     * Setup this consumer's [basicConsumer]s on rabbit as well as the [EventBus] consumer that will handle incoming
+     * messages
+     */
+    private fun startConsumers() = Handler<AsyncResult<Unit>> { ar ->
+        if ( ar.failed() ) {
+            startHandler.handle(Future.failedFuture(ar.cause()))
+        }
+        else {
+            // Event bus consumer will pick up the bridged message using the handler provided
+            vertx.eventBus().consumer(queue, messageHandler)
+            // Basic consumes bridges rabbit message to the event bus
+            (1..consumers).forEach {
+                client.basicConsume(queue, queue, autoAck, prefetchLimit, Handler { ar -> handleConsumerStartup(ar) })
+            }
+        }
+    }
+
+    /**
+     * Handle consumer startup by signaling success or failure on the passed in [startHandler]
+     */
+    private fun handleConsumerStartup(ar: AsyncResult<String>) {
+        when ( ar.succeeded() ) {
+            true -> {
+                logger.info("Listening to $exchange:$routingKey -> $queue [${ar.result()}]")
+                startHandler.handle(Future.succeededFuture())
+            }
+            else -> {
+                logger.error("Failed to setup consumer $exchange:$routingKey -> $queue", ar.cause())
+                startHandler.handle(Future.failedFuture(ar.cause()))
+            }
+        }
     }
 
     /**
@@ -93,41 +150,6 @@ class RabbitConsumerConnector(
                     if ( ar.failed() ) logger.error(ar.cause())
                 })
                 logger.error(exception)
-            }
-        }
-    }
-
-    /**
-     * Bind this consumer's [queue] to it's [exchange] and [routingKey]
-     */
-    private fun bindQueue() = Handler<AsyncResult<JsonObject>> { async ->
-        if( async.failed() ) throw IllegalStateException("Failed to declare queue $queue", async.cause())
-        client.queueBind(queue, exchange, routingKey, startConsumers())
-    }
-
-    /**
-     * Setup this consumer's [basicConsume]rs on rabbit as well as the [EventBus] consumer that will handle incoming
-     * messages
-     */
-    private fun startConsumers() = Handler<AsyncResult<Unit>> { async ->
-        if ( async.failed() ) throw IllegalStateException("Failed to bind queue $exchange:$routingKey -> $queue", async.cause())
-        // Event bus consumer will pick up the bridged message using the handler provided
-        vertx.eventBus().consumer(queue, handler)
-        // Basic consumes bridges rabbit message to the event bus
-        (1..consumers).forEach {
-            client.basicConsume(queue, queue, autoAck, prefetchLimit, Handler<AsyncResult<String>> { ar -> handleConsumer(ar)})
-        }
-    }
-
-    private fun handleConsumer(ar: AsyncResult<String>) {
-        when ( ar.succeeded() ) {
-            true -> {
-                logger.info("Listening to $exchange:$routingKey -> $queue [${ar.result()}]")
-                startup.handle(Future.succeededFuture())
-            }
-            else -> {
-                logger.error("Failed to setup consumer $exchange:$routingKey -> $queue", ar.cause())
-                startup.handle(Future.failedFuture(ar.cause()))
             }
         }
     }

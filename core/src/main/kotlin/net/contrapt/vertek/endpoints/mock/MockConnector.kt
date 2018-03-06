@@ -31,9 +31,9 @@ class MockConnector(
         vertx.eventBus().send(address, message, handler)
     }
 
-    override fun start(vertx: Vertx, handler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
+    override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
         this.vertx = vertx
-        vertx.eventBus().consumer<JsonObject>(address, handler)
+        vertx.eventBus().consumer<JsonObject>(address, messageHandler)
         startHandler.handle(Future.succeededFuture())
     }
 

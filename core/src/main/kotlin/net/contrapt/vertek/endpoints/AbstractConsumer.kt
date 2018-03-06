@@ -15,17 +15,23 @@ import net.contrapt.vertek.plugs.Plug
  * [ConsumerConnector] which implements the particular external transport.  Subclasses can also provide
  * [MessagePlug]'s for pipeline processing and [ExceptionHandler]'s for defining exception behaviour
  */
-abstract class AbstractConsumer(
-        val connector: ConsumerConnector
-) : AbstractVerticle(), Handler<Message<JsonObject>> {
+abstract class AbstractConsumer(val connector: ConsumerConnector) : AbstractVerticle(), Handler<Message<JsonObject>> {
 
     private val plugs = mutableListOf<MessagePlug>()
-    val logger = LoggerFactory.getLogger(javaClass)
+    protected val logger = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * Start this consumer [Verticle] by starting the [ConsumerConnector] and if successful calling [startInternal]
+     */
     final override fun start(future: Future<Void>) {
-        connector.start(vertx, this, Handler {
-            startInternal()
-            future.complete()
+        connector.start(vertx, this, Handler { ar ->
+            if ( ar.succeeded() ) {
+                startInternal()
+                future.complete()
+            }
+            else {
+                future.fail(ar.cause())
+            }
         })
     }
 
@@ -48,7 +54,7 @@ abstract class AbstractConsumer(
     final override fun handle(message: Message<JsonObject>) {
         // TODO What if you want a transaction around message handling?
         // TODO How would you implement aggregation, and maybe other EIPs?
-        vertx.executeBlocking(Handler<Future<Nothing>> { future ->
+        vertx.executeBlocking(Handler { future ->
             try{
                 processInbound(message)
                 handleMessage(message)
@@ -58,7 +64,7 @@ abstract class AbstractConsumer(
                 // TODO Exception handlers
                 future.fail(e)
             }
-        }, false, Handler<AsyncResult<Nothing>> {ar ->
+        }, false, Handler<AsyncResult<Unit>> {ar ->
             if ( ar.failed() ) connector.handleFailure(message, ar.cause())
             else connector.handleSuccess(message)
         })
@@ -71,7 +77,7 @@ abstract class AbstractConsumer(
     }
 
     /**
-     * Override this method to implement the main [Message] handling code for this consumer
+     * Process the consumed [Message] after all inbound [MessagePlug]s are applied
      */
     abstract fun handleMessage(message: Message<JsonObject>)
 

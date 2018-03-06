@@ -34,7 +34,7 @@ class RabbitConsumerTest {
             isAutomaticRecoveryEnabled = true
             networkRecoveryInterval = 5000
         }
-        connector = RabbitConsumerConnector(factory, "amq.topic", "rabbit.test", "rabbit.test")
+        connector = RabbitConsumerConnector(factory, "amq.topic", "rabbit.test", "rabbit.test", durable = true)
         consumer = TestConsumer(connector)
     }
 
@@ -42,14 +42,13 @@ class RabbitConsumerTest {
     fun after(context: TestContext) {
     }
 
-    @Test(timeout = 5000)
+    @Test(timeout = 10000)
     fun testSuccess(context: TestContext) {
-        rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){ id ->
-            logger.info("here i am with $id")
+        rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
             consumer.finished = context.async()
-            connector.send(JsonObject().put("key", "success").put("body", "something"), context.asyncAssertSuccess() { it ->
+            connector.send(JsonObject().put("key", "success").put("body", "something"), context.asyncAssertSuccess() {
                 consumer.finished.awaitSuccess()
-                context.assertTrue(consumer.messageCount == 1)
+                context.assertEquals(1, consumer.messageCount, "Message count")
             })
         })
     }

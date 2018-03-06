@@ -20,51 +20,33 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    var includeProperties = true
-
     private lateinit var defaultChannel: Channel
     private lateinit var publishChannel: Channel
     private val consumerChannels = mutableMapOf<String, Channel>()
 
-    fun start(successHandler: () -> Unit) {
-        logger.info("Starting rabbitmq client")
-        vertx.executeBlocking(Handler<Future<Unit>> { future ->
+    fun start(startupHandler: Handler<AsyncResult<Unit>>) {
+        logger.info("Starting RabbitClient")
+        vertx.executeBlocking(Handler { future ->
             try {
                 connect()
                 future.complete()
             } catch (e: Exception) {
-                logger.error("Could not connect to rabbitmq", e)
+                logger.error("Error starting RabbitClient", e)
                 future.fail(e)
             }
-        }, startHandler(successHandler))
+        }, startupHandler)
     }
 
-    private fun startHandler(successHandler: () -> Unit) = Handler<AsyncResult<Unit>> { async ->
-        when (async.succeeded()) {
-            true -> {
-                successHandler()
-            }
-            false -> {
-                logger.warn("Unable to connect to rabbit", async.cause())
-                logger.warn("Trying again in 10s")
-                vertx.setTimer(10000, {
-                    logger.info("Trying again")
-                    start(successHandler)
-                })
-            }
-        }
-    }
-
-    fun stop(resultHandler: Handler<AsyncResult<Unit>>) {
-        logger.info("Stopping rabbitmq client")
-        vertx.executeBlocking(Handler<Future<Unit>> { future ->
+    fun stop(stopHandler: Handler<AsyncResult<Unit>>) {
+        logger.info("Stopping RabbitClient")
+        vertx.executeBlocking(Handler { future ->
             try {
                 disconnect()
                 future.complete()
             } catch (e: IOException) {
                 future.fail(e)
             }
-        }, resultHandler)
+        }, stopHandler)
     }
 
     fun basicAck(consumerTag: String, deliveryTag: Long, multiple: Boolean, resultHandler: Handler<AsyncResult<Unit>>) {
@@ -111,9 +93,7 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
             } else {
                 val json = JsonObject()
                 populate(json, response.envelope)
-                if (includeProperties) {
-                    put("properties", toJson(response.props), json)
-                }
+                put("properties", toJson(response.props), json)
                 put("body", parse(response.props, response.body), json)
                 put("messageCount", response.messageCount, json)
                 json
@@ -401,9 +381,7 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
             populate(msg, envelope)
 
             // Add properties (if configured)
-            if (includeProperties) {
-                put("properties", toJson(properties), msg)
-            }
+            put("properties", toJson(properties), msg)
 
             //TODO: Allow an SPI which can be pluggable to handle parsing the body
             // Parse the body

@@ -16,17 +16,23 @@ import net.contrapt.vertek.plugs.Plug
  * system.  Subclasses of [AbstractProducer] define the message handling in [handleMessage] and can add
  * [MessagePlug]s for pipeline processing and [ExceptionHandler]s
  */
-abstract class AbstractProducer(
-        val connector: ProducerConnector
-) : AbstractVerticle(), Handler<Message<JsonObject>> {
+abstract class AbstractProducer(val connector: ProducerConnector) : AbstractVerticle(), Handler<Message<JsonObject>> {
 
     protected val logger = LoggerFactory.getLogger(javaClass)
     private val plugs = mutableListOf<MessagePlug>()
 
+    /**
+     * Start this producer [Verticle] by starting the [ProducerConnector] and if successful calling [startupInternal]
+     */
     final override fun start(future: Future<Void>) {
-        connector.start(vertx, this, Handler {
-            startupInternal()
-            future.complete()
+        connector.start(vertx, this, Handler { ar ->
+            if ( ar.succeeded() ) {
+                startupInternal()
+                future.complete()
+            }
+            else {
+                future.fail(ar.cause())
+            }
         })
     }
 
@@ -66,7 +72,7 @@ abstract class AbstractProducer(
      * be published
      */
     final override fun handle(message : Message<JsonObject>) {
-        vertx.executeBlocking(Handler<Future<Nothing>> { future ->
+        vertx.executeBlocking(Handler { future ->
             try {
                 handleMessage(message)
                 processOutbound(message)
@@ -76,14 +82,15 @@ abstract class AbstractProducer(
                 //TODO add exception handlers
                 future.fail(e)
             }
-        }, false, Handler<AsyncResult<Nothing>> {ar ->
+        }, false, Handler<AsyncResult<Unit>> {ar ->
             if ( ar.failed() ) connector.handleFailure(message, ar.cause())
             else connector.handleSuccess(message)
         })
     }
 
     /**
-     * Do any processing of the message before the [ProducerConnector] publishes the message
+     * Do any processing of the message before outbound [MessagePlug]s are applied and [ProducerConnector]
+     * publishes the message
      */
     abstract fun handleMessage(message: Message<JsonObject>)
 

@@ -15,8 +15,8 @@ class WebSocketConnector(
     override val address: String
 ) : ConsumerConnector {
 
-    override fun start(vertx: Vertx, handler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
-        vertx.eventBus().consumer<JsonObject>(address, handler)
+    override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
+        vertx.eventBus().consumer<JsonObject>(address, messageHandler)
         startHandler.handle(Future.succeededFuture())
     }
 

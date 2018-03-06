@@ -16,10 +16,10 @@ interface Connector {
     /**
      * Startup the [Connector]
      * @param vertx The current instance of [Vertx]
-     * @param handler The connector's handling of the message
+     * @param messageHandler The connector's handling of the message
      * @param startHandler Handler to call after startup
      */
-    fun start(vertx: Vertx, handler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>)
+    fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>)
 
     /**
      * Handle failure of message processing
