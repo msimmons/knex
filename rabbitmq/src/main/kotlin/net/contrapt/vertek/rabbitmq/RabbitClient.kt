@@ -8,11 +8,7 @@ import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
 import java.io.IOException
-import java.io.UnsupportedEncodingException
 import java.nio.charset.Charset
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.function.BiConsumer
 
@@ -88,34 +84,15 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
     fun basicGet(queue: String, autoAck: Boolean, resultHandler: Handler<AsyncResult<JsonObject>>) {
         withChannel(defaultChannel, resultHandler, { c ->
             val response = c.basicGet(queue, autoAck)
-            if (response == null) {
-                JsonObject()
-            } else {
-                val json = JsonObject()
-                populate(json, response.envelope)
-                put("properties", toJson(response.props), json)
-                put("body", parse(response.props, response.body), json)
-                put("messageCount", response.messageCount, json)
-                json
-            }
+            toJson(response)
         })
     }
 
     fun basicPublish(exchange: String, routingKey: String, message: JsonObject, resultHandler: Handler<AsyncResult<Unit>>) {
         withChannel(publishChannel, resultHandler, { c ->
-            //TODO: Really need an SPI / Interface to decouple this and allow pluggable implementations
-            val properties = message.getJsonObject("properties")
-            val contentType = if (properties == null) null else properties.getString("contentType")
-            val encoding = properties?.getString("contentEncoding")
-            val body: ByteArray
-            body = when (contentType) {
-                null -> encode(encoding, message.getString("body"))
-                "application/json" -> encode(encoding, message.getJsonObject("body").toString())
-                "application/octet-stream" -> message.getBinary("body")
-                "text/plain" -> encode(encoding, message.getString("body"))
-                else -> encode(encoding, message.getString("body"))
-            }
-            c.basicPublish(exchange, routingKey, fromJson(properties), body)
+            val properties = fromJson(message.getJsonObject("properties"))
+            val body = encodeBody(message.getString("body"))
+            c.basicPublish(exchange, routingKey, properties, body)
         })
     }
 
@@ -238,60 +215,100 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
         }
     }
 
-    private fun populate(json: JsonObject, envelope: Envelope?) {
-        if (envelope == null) return
+    /**
+     * Convert a [GetResponse] to a [JsonObject] for placing on the [EventBus] as a [Message]
+     */
+    private fun toJson(response: GetResponse?) : JsonObject {
+        return when ( response ) {
+            null -> JsonObject()
+            else -> JsonObject().apply {
+                addToMessage(this, response.envelope)
+                addToMessage(this, response.props)
+                put("body", decodeBody(response.body))
+                put("messageCount", response.messageCount)
+            }
+        }
+    }
 
-        put("deliveryTag", envelope.deliveryTag, json)
-        put("isRedeliver", envelope.isRedeliver, json)
-        put("exchange", envelope.exchange, json)
-        put("routingKey", envelope.routingKey, json)
+    /**
+     * Extension to [JsonObject] to only put non-null values and do some value conversions
+     */
+    fun JsonObject.putNotNull(key: String, value: Any?) {
+        when ( value ) {
+            null -> {}
+            is LongString -> put(key, String(value.bytes))
+            is Date -> put(key, value.toInstant())
+            else -> put(key, value)
+        }
+    }
+
+    private fun addToMessage(message: JsonObject, envelope: Envelope?) {
+        if ( envelope == null ) return
+        message.apply {
+            putNotNull("deliveryTag", envelope.deliveryTag)
+            putNotNull("isRedeliver", envelope.isRedeliver)
+            putNotNull("exchange", envelope.exchange)
+            putNotNull("routingKey", envelope.routingKey)
+        }
+    }
+
+    /**
+     * Add the rabbit properties to the [JsonObject] message
+     */
+    private fun addToMessage(message: JsonObject, properties: AMQP.BasicProperties?) {
+        if ( properties == null ) return
+        val json = JsonObject().apply {
+            putNotNull("contentType", properties.contentType)
+            putNotNull("contentEncoding", properties.contentEncoding)
+            putNotNull("deliveryMode", properties.deliveryMode)
+            putNotNull("priority", properties.priority)
+            putNotNull("correlationId", properties.correlationId)
+            putNotNull("replyTo", properties.replyTo)
+            putNotNull("expiration", properties.expiration)
+            putNotNull("messageId", properties.messageId)
+            putNotNull("timestamp", properties.timestamp)
+            putNotNull("type", properties.type)
+            putNotNull("userId", properties.userId)
+            putNotNull("appId", properties.appId)
+            putNotNull("clusterId", properties.clusterId)
+            putNotNull("headers", mapToJson(properties.headers))
+        }
+        message.put("properties", json)
+    }
+
+    /**
+     * Convert a [Map] (headers) to a [JsonObject]
+     */
+    private fun mapToJson(map: Map<String, Any?>?) : JsonObject {
+        val json = JsonObject()
+        map?.entries?.forEach {
+            json.putNotNull(it.key, it.value)
+        }
+        return json
+    }
+
+    private fun decodeBody(body: ByteArray?) : String {
+        return body?.toString(Charset.defaultCharset()) ?: ""
+    }
+
+    private fun encodeBody(body: String?) : ByteArray {
+        return body?.toByteArray(Charset.defaultCharset()) ?: ByteArray(0)
     }
 
     private fun toJson(queueDeclare: AMQP.Queue.DeclareOk?): JsonObject? {
         if (queueDeclare == null) return null
-        val json = JsonObject()
-        put("queue", queueDeclare.queue, json)
-        put("messageCount", queueDeclare.messageCount, json)
-        put("consumerCount", queueDeclare.consumerCount, json)
-
-        return json
+        return JsonObject().apply {
+            putNotNull("queue", queueDeclare.queue)
+            putNotNull("messageCount", queueDeclare.messageCount)
+            putNotNull("consumerCount", queueDeclare.consumerCount)
+        }
     }
 
     private fun toJson(queueDelete: AMQP.Queue.DeleteOk?): JsonObject? {
         if (queueDelete == null) return null
-        val json = JsonObject()
-        put("messageCount", queueDelete.messageCount, json)
-
-        return json
-    }
-
-    private fun toJson(properties: AMQP.BasicProperties?): JsonObject? {
-        if (properties == null) return null
-
-        val json = JsonObject()
-        put("contentType", properties.contentType, json)
-        put("contentEncoding", properties.contentEncoding, json)
-        put("headers", toJsonObject(properties.headers), json)
-        put("deliveryMode", properties.deliveryMode, json)
-        put("priority", properties.priority, json)
-        put("correlationId", properties.correlationId, json)
-        put("replyTo", properties.replyTo, json)
-        put("expiration", properties.expiration, json)
-        put("messageId", properties.messageId, json)
-        put("timestamp", properties.timestamp, json)
-        put("type", properties.type, json)
-        put("userId", properties.userId, json)
-        put("appId", properties.appId, json)
-        put("clusterId", properties.clusterId, json)
-
-        return json
-    }
-
-    private fun toJsonObject(map: Map<String, Any?>?) : JsonObject {
-        if ( map == null ) return JsonObject()
-        val json = JsonObject()
-        map.entries.forEach { put(it.key, it.value, json) }
-        return json
+        return JsonObject().apply {
+            putNotNull("messageCount", queueDelete.messageCount)
+        }
     }
 
     private fun fromJson(json: JsonObject?): AMQP.BasicProperties {
@@ -305,7 +322,7 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
             .replyTo(json.getString("replyTo"))
             .expiration(json.getString("expiration"))
             .messageId(json.getString("messageId"))
-            .timestamp(parseDate(json.getString("timestamp")))
+            .timestamp(Date.from(json.getInstant("timestamp")))
             .type(json.getString("type"))
             .userId(json.getString("userId"))
             .appId(json.getString("appId"))
@@ -313,87 +330,16 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
 
     }
 
-    private fun parse(properties: AMQP.BasicProperties?, bytes: ByteArray?): Any? {
-        if (bytes == null) return null
-
-        val encoding = properties?.contentEncoding
-        val contentType = properties?.contentType
-        return when (contentType) {
-            //"application/json" -> JsonObject(decode(encoding, bytes))
-            "application/octet-stream" -> bytes
-            "text/plain" -> decode(encoding, bytes)
-            else -> decode(encoding, bytes)
-        }
-    }
-
-    private fun decode(encoding: String?, bytes: ByteArray): String {
-        return if (encoding == null) {
-            String(bytes, Charset.forName("UTF-8"))
-        } else if ( !Charset.availableCharsets().containsKey(encoding) ) {
-            String(bytes, Charset.forName("UTF-8"))
-        } else {
-            String(bytes, Charset.forName(encoding))
-        }
-    }
-
-    private fun encode(encoding: String?, string: String): ByteArray {
-        return if (encoding == null) {
-            string.toByteArray()
-        } else if ( !Charset.availableCharsets().containsKey(encoding) ) {
-            string.toByteArray()
-        } else {
-            string.toByteArray(charset(encoding))
-        }
-    }
-
-    private fun put(field: String, value: Any?, json: JsonObject) {
-        when ( value ) {
-            null -> return
-            is LongString -> json.put(field, String(value.bytes))
-            is Date -> put(field, value, json)
-            else -> json.put(field, value)
-        }
-    }
-
-    private fun put(field: String, value: Date?, json: JsonObject) {
-        if ( value == null ) return
-        val date = OffsetDateTime.ofInstant(value.toInstant(), ZoneId.of("UTC"))
-        val format = date.format(dateTimeFormatter)
-        json.put(field, format)
-    }
-
-    private fun parseDate(date: String?): Date? {
-        if (date == null) return null
-
-        val odt = OffsetDateTime.parse(date, dateTimeFormatter)
-        return Date.from(odt.toInstant())
-    }
-
-    private val dateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
-
     private fun consumerHandler(channel: Channel, handler: Handler<AsyncResult<JsonObject>>) = object : DefaultConsumer(channel) {
 
         override fun handleDelivery(consumerTag: String?, envelope: Envelope?, properties: AMQP.BasicProperties?, body: ByteArray?) {
-            val msg = JsonObject()
-            msg.put("consumerTag", consumerTag)
-
-            // Add the envelope data
-            populate(msg, envelope)
-
-            // Add properties (if configured)
-            put("properties", toJson(properties), msg)
-
-            //TODO: Allow an SPI which can be pluggable to handle parsing the body
-            // Parse the body
-            try {
-                msg.put("body", parse(properties, body))
-                vertx.runOnContext { _ -> handler.handle(Future.succeededFuture(msg)) }
-
-                msg.put("deliveryTag", envelope?.deliveryTag)
-
-            } catch (e: UnsupportedEncodingException) {
-                vertx.runOnContext { _ -> handler.handle(Future.failedFuture(e)) }
+            val message = JsonObject().apply {
+                addToMessage(this, envelope)
+                addToMessage(this, properties)
+                this.putNotNull("consumerTag", consumerTag)
+                this.put("body", decodeBody(body))
             }
+            vertx.runOnContext { _ -> handler.handle(Future.succeededFuture(message)) }
         }
     }
 
