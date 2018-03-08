@@ -14,7 +14,7 @@ import net.contrapt.vertek.endpoints.ProducerConnector
  * Represents the configuration of a message bus endpoint that we would like to
  * send a message to
  */
-abstract class RabbitProducerConnector(
+class RabbitProducerConnector(
     val connectionFactory: ConnectionFactory,
     override val address: String,
     val exchange: String,
@@ -55,7 +55,13 @@ abstract class RabbitProducerConnector(
      */
     private fun basicPublish(message: Message<JsonObject>) {
         client.basicPublish(exchange, routingKey, message.body(), Handler<AsyncResult<Unit>> {ar ->
-            if ( ar.cause() != null ) logger.error("Error publishing message: $message", ar.cause())
+            if ( ar.succeeded() ) {
+                message.reply(JsonObject())
+            }
+            else {
+                logger.error("Error publishing message: $message", ar.cause())
+                message.fail(500, ar.cause().message)
+            }
         })
     }
 
