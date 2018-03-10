@@ -34,7 +34,7 @@ class RabbitConsumerTest {
             isAutomaticRecoveryEnabled = true
             networkRecoveryInterval = 5000
         }
-        connector = RabbitConsumerConnector(factory, "amq.topic", "rabbit.test", "rabbit.test", durable = true)
+        connector = RabbitConsumerConnector(factory, "amq.topic", "consumer.test", "consumer.test", durable = false)
         consumer = TestConsumer(connector)
     }
 
