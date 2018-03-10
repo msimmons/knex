@@ -7,7 +7,6 @@ import io.vertx.ext.unit.junit.RunTestOnContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
 import net.contrapt.vertek.endpoints.mock.MockConnector
 import net.contrapt.vertek.plugs.MessagePlug
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -27,10 +26,6 @@ class AbstractConsumerTest {
         rule.vertx().exceptionHandler(context.exceptionHandler())
         connector = MockConnector("test")
         consumer = TestConsumer(connector)
-    }
-
-    @After
-    fun after(context: TestContext) {
     }
 
     @Test

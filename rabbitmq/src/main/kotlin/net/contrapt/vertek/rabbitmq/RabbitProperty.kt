@@ -9,33 +9,13 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.javaMethod
 
-sealed class RabbitProperty<T>(val key: String, private val getter: Method?) {
-
-    val foo = AMQP.BasicProperties.Builder::contentEncoding.javaMethod
-    fun get(properties: AMQP.BasicProperties) : T = getter?.invoke(properties) as T
-
-    object ContentType : RabbitProperty<String>("contentType", AMQP.BasicProperties::getContentType.javaMethod)
-    object ContentEncoding : RabbitProperty<String>("contentEncoding", AMQP.BasicProperties::getContentEncoding.javaMethod)
-    object DeliveryMode : RabbitProperty<Int>("deliveryMode", AMQP.BasicProperties::getDeliveryMode.javaMethod)
-    object Priority : RabbitProperty<Int>("priority", AMQP.BasicProperties::getPriority.javaMethod)
-    object CorrelationId : RabbitProperty<String>("correlationId", AMQP.BasicProperties::getCorrelationId.javaMethod)
-    object ReplyTo : RabbitProperty<String>("replyTo", AMQP.BasicProperties::getReplyTo.javaMethod)
-    object Expiration : RabbitProperty<String>("expiration", AMQP.BasicProperties::getExpiration.javaMethod)
-    object MessageId : RabbitProperty<String>("messageId", AMQP.BasicProperties::getMessageId.javaMethod)
-    object Timestamp : RabbitProperty<Date>("timestamp", AMQP.BasicProperties::getTimestamp.javaMethod)
-    object Type : RabbitProperty<String>("type", AMQP.BasicProperties::getType.javaMethod)
-    object UserId : RabbitProperty<String>("userId", AMQP.BasicProperties::getUserId.javaMethod)
-    object AppId : RabbitProperty<String>("appId", AMQP.BasicProperties::getAppId.javaMethod)
-    object ClusterId : RabbitProperty<String>("clusterId", AMQP.BasicProperties::getClusterId.javaMethod)
-    object Headers : RabbitProperty<Map<String, Any?>>("headers", AMQP.BasicProperties::getHeaders.javaMethod)
-
-}
-
 private typealias Properties = AMQP.BasicProperties
 private typealias Builder = AMQP.BasicProperties.Builder
 
-
-enum class FooProperty(private val getter: Method, private val setter: Method, private val klass: KClass<*>) {
+/**
+ * Helps to manage transfer of rabbit message properties to and from message representation
+ */
+enum class RabbitProperty(private val getter: Method, private val setter: Method, val klass: KClass<*>) {
 
     contentType(Properties::getContentType.javaMethod!!, Builder::contentType.javaMethod!!, String::class),
     contentEncoding(Properties::getContentEncoding.javaMethod!!, Builder::contentEncoding.javaMethod!!, String::class),
@@ -54,7 +34,22 @@ enum class FooProperty(private val getter: Method, private val setter: Method, p
 
     companion object {
 
+        val CONTENT_TYPE = contentType.name
+        val CONTENT_ENCODING = contentEncoding.name
+        val DELIVERY_MODE = deliveryMode.name
+        val PRIORITY = priority.name
+        val CORRELATION_ID = correlationId.name
+        val REPLY_TO = replyTo.name
+        val EXPIRATION = expiration.name
+        val MESSAGE_ID = messageId.name
+        val TIMESTAMP = timestamp.name
+        val TYPE = type.name
+        val USER_ID = userId.name
+        val CLUSTER_ID = clusterId.name
+        val HEADERS = headers.name
+
         fun toJson(properties: AMQP.BasicProperties) : JsonObject {
+
             return JsonObject().apply {
                 values().forEach {
                     safePut(this, it.name, it.getter.invoke(properties))
@@ -72,6 +67,7 @@ enum class FooProperty(private val getter: Method, private val setter: Method, p
                             Date::class -> Date.from(Instant.parse(jsonValue))
                             else -> jsonValue
                         }
+                        is JsonObject -> jsonValue.map
                         else -> jsonValue
                     }
                     it.setter.invoke(this, value)
@@ -84,6 +80,7 @@ enum class FooProperty(private val getter: Method, private val setter: Method, p
                 null -> {}
                 is LongString -> json.put(key, String(value.bytes))
                 is Date -> json.put(key, value.toInstant())
+                is Map<*,*> -> json.put(key, mapToJson(value as Map<String, Any?>))
                 else -> json.put(key, value)
             }
         }
@@ -97,6 +94,19 @@ enum class FooProperty(private val getter: Method, private val setter: Method, p
                 else -> null
             }
         }
+
+        /**
+         * Convert a [Map] (headers) to a [JsonObject]
+         */
+        private fun mapToJson(map: Map<String, Any?>?) : JsonObject {
+            val json = JsonObject()
+            map?.entries?.forEach {
+                safePut(json, it.key, it.value)
+            }
+            return json
+        }
+
+
     }
 
 }

@@ -63,7 +63,7 @@ class WebSocketRouter(
 
     private fun bridgeEventHandler() = Handler<BridgeEvent> { event ->
         when (event.type()) {
-            BridgeEventType.SOCKET_PING -> null
+            BridgeEventType.SOCKET_PING -> {}
             BridgeEventType.RECEIVE -> processOutbound(event)
             BridgeEventType.SEND -> processInbound(event)
             BridgeEventType.PUBLISH -> processInbound(event)

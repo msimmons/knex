@@ -9,7 +9,6 @@ import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
 import java.io.IOException
 import java.nio.charset.Charset
-import java.time.Instant
 import java.util.*
 import java.util.function.BiConsumer
 
@@ -231,35 +230,13 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
         }
     }
 
-    /**
-     * Extension to [JsonObject] to only put non-null values and do some value conversions
-     */
-    fun JsonObject.nullSafePut(key: String, value: Any?) {
-        when ( value ) {
-            null -> {}
-            is LongString -> put(key, String(value.bytes))
-            is Date -> put(key, value.toInstant())
-            else -> put(key, value)
-        }
-    }
-
-    inline fun <reified T> JsonObject.nullSafeGet(key: String) : T? {
-        val value = getValue("key")
-        return when ( value ) {
-            null -> null
-            is Instant -> Date.from(value) as T
-            is T -> value
-            else -> null
-        }
-    }
-
     private fun addToMessage(message: JsonObject, envelope: Envelope?) {
         if ( envelope == null ) return
         message.apply {
-            nullSafePut("deliveryTag", envelope.deliveryTag)
-            nullSafePut("isRedeliver", envelope.isRedeliver)
-            nullSafePut("exchange", envelope.exchange)
-            nullSafePut("routingKey", envelope.routingKey)
+            put("deliveryTag", envelope.deliveryTag)
+            put("isRedeliver", envelope.isRedeliver)
+            put("exchange", envelope.exchange)
+            put("routingKey", envelope.routingKey)
         }
     }
 
@@ -268,34 +245,8 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
      */
     private fun addToMessage(message: JsonObject, properties: AMQP.BasicProperties?) {
         if ( properties == null ) return
-        val json = JsonObject().apply {
-            nullSafePut("contentType", properties.contentType)
-            nullSafePut("contentEncoding", properties.contentEncoding)
-            nullSafePut("deliveryMode", properties.deliveryMode)
-            nullSafePut("priority", properties.priority)
-            nullSafePut("correlationId", properties.correlationId)
-            nullSafePut("replyTo", properties.replyTo)
-            nullSafePut("expiration", properties.expiration)
-            nullSafePut("messageId", properties.messageId)
-            nullSafePut("timestamp", properties.timestamp)
-            nullSafePut("type", properties.type)
-            nullSafePut("userId", properties.userId)
-            nullSafePut("appId", properties.appId)
-            nullSafePut("clusterId", properties.clusterId)
-            nullSafePut("headers", mapToJson(properties.headers))
-        }
+        val json = RabbitProperty.toJson(properties)
         message.put("properties", json)
-    }
-
-    /**
-     * Convert a [Map] (headers) to a [JsonObject]
-     */
-    private fun mapToJson(map: Map<String, Any?>?) : JsonObject {
-        val json = JsonObject()
-        map?.entries?.forEach {
-            json.nullSafePut(it.key, it.value)
-        }
-        return json
     }
 
     private fun decodeBody(body: ByteArray?) : String {
@@ -309,36 +260,21 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
     private fun toJson(queueDeclare: AMQP.Queue.DeclareOk?): JsonObject? {
         if (queueDeclare == null) return null
         return JsonObject().apply {
-            nullSafePut("queue", queueDeclare.queue)
-            nullSafePut("messageCount", queueDeclare.messageCount)
-            nullSafePut("consumerCount", queueDeclare.consumerCount)
+            put("queue", queueDeclare.queue)
+            put("messageCount", queueDeclare.messageCount)
+            put("consumerCount", queueDeclare.consumerCount)
         }
     }
 
     private fun toJson(queueDelete: AMQP.Queue.DeleteOk?): JsonObject? {
         if (queueDelete == null) return null
         return JsonObject().apply {
-            nullSafePut("messageCount", queueDelete.messageCount)
+            put("messageCount", queueDelete.messageCount)
         }
     }
 
     private fun fromJson(json: JsonObject?): AMQP.BasicProperties {
-        return if (json == null) AMQP.BasicProperties() else AMQP.BasicProperties.Builder()
-            .contentType(json.getString("contentType"))
-            .contentEncoding(json.getString("contentEncoding"))
-            .headers((json.getJsonObject("headers")?.map))
-            .deliveryMode(json.getInteger("deliveryMode"))
-            .priority(json.getInteger("priority"))
-            .correlationId(json.getString("correlationId"))
-            .replyTo(json.getString("replyTo"))
-            .expiration(json.getString("expiration"))
-            .messageId(json.getString("messageId"))
-            .timestamp(json.nullSafeGet("timestamp"))
-            .type(json.getString("type"))
-            .userId(json.getString("userId"))
-            .appId(json.getString("appId"))
-            .clusterId(json.getString("clusterId")).build()
-
+        return if (json == null) AMQP.BasicProperties() else RabbitProperty.fromJson(json)
     }
 
     private fun consumerHandler(channel: Channel, handler: Handler<AsyncResult<JsonObject>>) = object : DefaultConsumer(channel) {
@@ -347,7 +283,7 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
             val message = JsonObject().apply {
                 addToMessage(this, envelope)
                 addToMessage(this, properties)
-                this.nullSafePut("consumerTag", consumerTag)
+                this.put("consumerTag", consumerTag)
                 this.put("body", decodeBody(body))
             }
             vertx.runOnContext { _ -> handler.handle(Future.succeededFuture(message)) }

@@ -7,7 +7,6 @@ import io.vertx.ext.unit.junit.RunTestOnContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
 import net.contrapt.vertek.endpoints.mock.MockConnector
 import net.contrapt.vertek.plugs.MessagePlug
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -29,14 +28,10 @@ class AbstractProducerTest {
         producer = TestProducer(connector)
     }
 
-    @After
-    fun after(context: TestContext) {
-    }
-
     @Test
     fun testSuccess(context: TestContext) {
-        rule.vertx().deployVerticle(producer, context.asyncAssertSuccess(){ id ->
-            producer.send(JsonObject().put("key", "success"), handler = context.asyncAssertSuccess { it ->
+        rule.vertx().deployVerticle(producer, context.asyncAssertSuccess(){
+            producer.send(JsonObject().put("key", "success"), handler = context.asyncAssertSuccess {
                 context.assertEquals(1, connector.successfulMessages.size)
             })
         })
@@ -44,8 +39,8 @@ class AbstractProducerTest {
 
     @Test
     fun testFailure(context: TestContext) {
-        rule.vertx().deployVerticle(producer, context.asyncAssertSuccess(){ id ->
-            producer.send(JsonObject().put("key", "failure"), handler = context.asyncAssertSuccess { it ->
+        rule.vertx().deployVerticle(producer, context.asyncAssertSuccess(){
+            producer.send(JsonObject().put("key", "failure"), handler = context.asyncAssertSuccess {
                 context.assertEquals(1, connector.failedMessages.size)
             })
         })
@@ -54,8 +49,8 @@ class AbstractProducerTest {
     @Test
     fun testPlug(context: TestContext) {
         producer.addPlug(TestPlug())
-        rule.vertx().deployVerticle(producer, context.asyncAssertSuccess(){ id ->
-            producer.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() { it ->
+        rule.vertx().deployVerticle(producer, context.asyncAssertSuccess(){
+            producer.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() {
                 context.assertEquals(1, connector.successfulMessages.size)
                 context.assertTrue(connector.successfulMessages[0].body().containsKey("plug"))
             })

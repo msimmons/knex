@@ -9,7 +9,6 @@ import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.RunTestOnContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
 import net.contrapt.vertek.endpoints.AbstractConsumer
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -38,14 +37,13 @@ class RabbitConsumerTest {
         consumer = TestConsumer(connector)
     }
 
-    @After
-    fun after(context: TestContext) {
-    }
-
     @Test(timeout = 10000)
     fun testSuccess(context: TestContext) {
         rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
-            val message = JsonObject().put("properties", JsonObject().put("priority", 1).put("contentType", "aes/gcm").put("correlationId", "456"))
+            val message = JsonObject().put("properties", JsonObject()
+                    .put(RabbitProperty.PRIORITY, 1)
+                    .put(RabbitProperty.CONTENT_TYPE, "aes/gcm")
+                    .put(RabbitProperty.CORRELATION_ID, "456"))
             message.getJsonObject("properties").put("headers", JsonObject().put("profileId", "123"))
             message.put("body", """{"meta":{"profile_id": "123"}}""").put("key", "success")
             consumer.finished = context.async()

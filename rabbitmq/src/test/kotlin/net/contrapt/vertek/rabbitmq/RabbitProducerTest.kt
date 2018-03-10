@@ -9,7 +9,6 @@ import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.RunTestOnContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
 import net.contrapt.vertek.endpoints.AbstractProducer
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -36,10 +35,6 @@ class RabbitProducerTest {
         }
         connector = RabbitProducerConnector(factory, "producer.test", "amq.topic", "producer.test")
         producer = TestProducer(connector)
-    }
-
-    @After
-    fun after(context: TestContext) {
     }
 
     @Test(timeout = 10000)
