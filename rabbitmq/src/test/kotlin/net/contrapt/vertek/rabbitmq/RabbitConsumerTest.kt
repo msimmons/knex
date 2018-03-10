@@ -45,8 +45,11 @@ class RabbitConsumerTest {
     @Test(timeout = 10000)
     fun testSuccess(context: TestContext) {
         rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
+            val message = JsonObject().put("properties", JsonObject().put("priority", 1).put("contentType", "aes/gcm").put("correlationId", "456"))
+            message.getJsonObject("properties").put("headers", JsonObject().put("profileId", "123"))
+            message.put("body", """{"meta":{"profile_id": "123"}}""").put("key", "success")
             consumer.finished = context.async()
-            connector.send(JsonObject().put("key", "success").put("body", "something"), context.asyncAssertSuccess() {
+            connector.send(message, context.asyncAssertSuccess() {
                 consumer.finished.awaitSuccess()
                 context.assertEquals(1, consumer.messageCount, "Message count")
             })
