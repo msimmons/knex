@@ -1,6 +1,7 @@
 package net.contrapt.vertek.rabbitmq
 
 import com.rabbitmq.client.ConnectionFactory
+import io.kotlintest.matchers.shouldBe
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
@@ -43,7 +44,7 @@ class RabbitProducerTest {
             producer.finished = context.async()
             producer.send(JsonObject().put("key", "success").put("body", "something"), context.asyncAssertSuccess() {
                 producer.finished.awaitSuccess()
-                context.assertEquals(1, producer.messageCount, "Message count")
+                producer.messageCount shouldBe 1
             })
         })
     }

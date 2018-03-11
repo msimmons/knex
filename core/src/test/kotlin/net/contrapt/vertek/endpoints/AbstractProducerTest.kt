@@ -1,5 +1,6 @@
 package net.contrapt.vertek.endpoints
 
+import io.kotlintest.matchers.shouldBe
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.unit.TestContext
@@ -32,7 +33,7 @@ class AbstractProducerTest {
     fun testSuccess(context: TestContext) {
         rule.vertx().deployVerticle(producer, context.asyncAssertSuccess(){
             producer.send(JsonObject().put("key", "success"), handler = context.asyncAssertSuccess {
-                context.assertEquals(1, connector.successfulMessages.size)
+                connector.successfulMessages.size shouldBe 1
             })
         })
     }
@@ -41,7 +42,7 @@ class AbstractProducerTest {
     fun testFailure(context: TestContext) {
         rule.vertx().deployVerticle(producer, context.asyncAssertSuccess(){
             producer.send(JsonObject().put("key", "failure"), handler = context.asyncAssertSuccess {
-                context.assertEquals(1, connector.failedMessages.size)
+                connector.failedMessages.size shouldBe 1
             })
         })
     }
@@ -51,8 +52,8 @@ class AbstractProducerTest {
         producer.addPlug(TestPlug())
         rule.vertx().deployVerticle(producer, context.asyncAssertSuccess(){
             producer.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() {
-                context.assertEquals(1, connector.successfulMessages.size)
-                context.assertTrue(connector.successfulMessages[0].body().containsKey("plug"))
+                connector.successfulMessages.size shouldBe 1
+                connector.successfulMessages[0].body().containsKey("plug") shouldBe true
             })
         })
     }

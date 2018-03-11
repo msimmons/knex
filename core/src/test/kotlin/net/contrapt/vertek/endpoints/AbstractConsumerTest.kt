@@ -1,7 +1,9 @@
 package net.contrapt.vertek.endpoints
 
+import io.kotlintest.matchers.shouldBe
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
+import io.vertx.core.logging.LoggerFactory
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.RunTestOnContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
@@ -32,7 +34,7 @@ class AbstractConsumerTest {
     fun testSuccess(context: TestContext) {
         rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
             connector.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() {
-                context.assertEquals(1, connector.successfulMessages.size)
+                connector.successfulMessages.size shouldBe 1
             })
         })
     }
@@ -41,7 +43,7 @@ class AbstractConsumerTest {
     fun testFailure(context: TestContext) {
         rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
             connector.send(JsonObject().put("key", "failure"), context.asyncAssertSuccess() {
-                context.assertEquals(1, connector.failedMessages.size)
+                connector.failedMessages.size shouldBe 1
             })
         })
     }
@@ -51,8 +53,19 @@ class AbstractConsumerTest {
         consumer.addPlug(TestPlug())
         rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
             connector.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() {
-                context.assertEquals(1, connector.successfulMessages.size)
-                context.assertTrue(connector.successfulMessages[0].body().containsKey("plug"))
+                connector.successfulMessages.size shouldBe 1
+                connector.successfulMessages[0].body().containsKey("plug") shouldBe true
+            })
+        })
+    }
+
+    @Test
+    fun testExceptionHandler(context: TestContext) {
+        consumer.addExceptionHandler(TestExceptionHandler(true))
+        rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
+            connector.send(JsonObject().put("key", "failure"), context.asyncAssertSuccess() {
+                connector.successfulMessages.size shouldBe 1
+                connector.successfulMessages[0].body().containsKey("handled") shouldBe true
             })
         })
     }
@@ -70,6 +83,18 @@ class AbstractConsumerTest {
 
         override fun process(message: Message<JsonObject>) {
             message.body().put("plug", Instant.now())
+        }
+
+    }
+
+    class TestExceptionHandler(val handled: Boolean) : ExceptionHandler {
+
+        val logger = LoggerFactory.getLogger(javaClass)
+
+        override fun handle(message: Message<JsonObject>, exception: Throwable): Boolean {
+            logger.error("Exception handler", exception)
+            message.body().put("handled", handled)
+            return handled
         }
 
     }
