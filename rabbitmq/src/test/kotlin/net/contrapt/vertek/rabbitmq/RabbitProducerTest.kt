@@ -34,7 +34,7 @@ class RabbitProducerTest {
             isAutomaticRecoveryEnabled = true
             networkRecoveryInterval = 5000
         }
-        connector = RabbitProducerConnector(factory, "producer.test", "amq.topic", "producer.test")
+        connector = RabbitProducerConnector(factory, "amq.topic", "producer.test")
         producer = TestProducer(connector)
     }
 

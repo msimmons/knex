@@ -21,7 +21,7 @@ class MockConnector(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     lateinit var vertx: Vertx
-    val successfulMessages = mutableListOf<Message<JsonObject>>()
+    val messages = mutableListOf<Message<JsonObject>>()
     val failedMessages = mutableListOf<Message<JsonObject>>()
 
     /**
@@ -45,7 +45,7 @@ class MockConnector(
     }
 
     override fun handleSuccess(message: Message<JsonObject>) {
-        successfulMessages.add(message)
+        messages.add(message)
         message.reply(message.body())
     }
 }

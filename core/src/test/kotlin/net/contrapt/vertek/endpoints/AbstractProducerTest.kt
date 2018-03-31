@@ -33,7 +33,7 @@ class AbstractProducerTest {
     fun testSuccess(context: TestContext) {
         rule.vertx().deployVerticle(producer, context.asyncAssertSuccess(){
             producer.send(JsonObject().put("key", "success"), handler = context.asyncAssertSuccess {
-                connector.successfulMessages.size shouldBe 1
+                connector.messages.size shouldBe 1
             })
         })
     }
@@ -52,8 +52,8 @@ class AbstractProducerTest {
         producer.addPlug(TestPlug())
         rule.vertx().deployVerticle(producer, context.asyncAssertSuccess(){
             producer.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() {
-                connector.successfulMessages.size shouldBe 1
-                connector.successfulMessages[0].body().containsKey("plug") shouldBe true
+                connector.messages.size shouldBe 1
+                connector.messages[0].body().containsKey("plug") shouldBe true
             })
         })
     }
