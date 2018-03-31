@@ -1,0 +1,14 @@
+dependencies {
+    compile project(':rabbitmq')
+    compile "io.vertx:vertx-config:$vertx_version"
+    compile "ch.qos.logback:logback-classic:1.2.3"
+    compile "org.springframework:spring-context:$spring_version"
+    //compile 'com.github.salomonbrys.kodein:kodein:4.1.0'
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'net.contrapt.vertek.example.Application'
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
