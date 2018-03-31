@@ -41,8 +41,14 @@ class RabbitProducerTest {
     @Test(timeout = 10000)
     fun testSuccess(context: TestContext) {
         rule.vertx().deployVerticle(producer, context.asyncAssertSuccess(){
+            val message = JsonObject().put("properties", JsonObject()
+                    .put(RabbitProperty.PRIORITY, 1)
+                    .put(RabbitProperty.CONTENT_TYPE, "aes/gcm")
+                    .put(RabbitProperty.CORRELATION_ID, "456"))
+            message.getJsonObject("properties").put("headers", JsonObject().put("profileId", "123"))
+            message.put("body", """{"meta":{"profile_id": "123"}}""").put("key", "success")
             producer.finished = context.async()
-            producer.send(JsonObject().put("key", "success").put("body", "something"), context.asyncAssertSuccess() {
+            producer.send(message, context.asyncAssertSuccess() {
                 producer.finished.awaitSuccess()
                 producer.messageCount shouldBe 1
             })
