@@ -45,4 +45,12 @@ abstract class AbstractConsumer(connector: ConsumerConnector) : AbstractEndpoint
      */
     abstract fun handleMessage(message: Message<JsonObject>)
 
+    /**
+     * Send an internal message to this [Consumer], bypassing the [Connector]
+     */
+    fun send(message: JsonObject, handler: Handler<AsyncResult<Message<JsonObject>>>) {
+        vertx.eventBus().send(connector.address, message, handler)
+    }
+
+
 }

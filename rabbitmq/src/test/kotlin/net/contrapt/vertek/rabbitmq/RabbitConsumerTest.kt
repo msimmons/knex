@@ -48,7 +48,7 @@ class RabbitConsumerTest {
             message.getJsonObject("properties").put("headers", JsonObject().put("profileId", "123"))
             message.put("body", """{"meta":{"profile_id": "123"}}""").put("key", "success")
             consumer.finished = context.async()
-            connector.send(message, context.asyncAssertSuccess() {
+            connector.publish(message, context.asyncAssertSuccess() {
                 consumer.finished.awaitSuccess()
                 consumer.messageCount shouldBe 1
             })

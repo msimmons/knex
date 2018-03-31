@@ -108,7 +108,7 @@ class RabbitConsumerConnector(
      * Publishes a message to this [Consumer]'s exchange and routing key.  It will be then be consumed
      * by this consumer
      */
-    fun send(message: JsonObject, handler: Handler<AsyncResult<Unit>>) {
+    fun publish(message: JsonObject, handler: Handler<AsyncResult<Unit>>) {
         client.basicPublish(exchange, routingKey, message, handler)
     }
 

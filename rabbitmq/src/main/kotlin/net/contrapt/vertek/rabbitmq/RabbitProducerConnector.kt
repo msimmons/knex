@@ -26,7 +26,7 @@ class RabbitProducerConnector(
 
     lateinit var client : RabbitClient
 
-    final override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
+    override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
         client = RabbitClient.create(vertx, connectionFactory)
         client.start(clientStartupHandler(vertx, messageHandler, startHandler))
     }

@@ -33,7 +33,7 @@ class AbstractConsumerTest {
     @Test
     fun testSuccess(context: TestContext) {
         rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
-            connector.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() {
+            consumer.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() {
                 connector.messages.size shouldBe 1
             })
         })
@@ -42,7 +42,7 @@ class AbstractConsumerTest {
     @Test
     fun testFailure(context: TestContext) {
         rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
-            connector.send(JsonObject().put("key", "failure"), context.asyncAssertSuccess() {
+            consumer.send(JsonObject().put("key", "failure"), context.asyncAssertSuccess() {
                 connector.failedMessages.size shouldBe 1
             })
         })
@@ -52,7 +52,7 @@ class AbstractConsumerTest {
     fun testPlug(context: TestContext) {
         consumer.addPlug(TestPlug())
         rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
-            connector.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() {
+            consumer.send(JsonObject().put("key", "success"), context.asyncAssertSuccess() {
                 connector.messages.size shouldBe 1
                 connector.messages[0].body().containsKey("plug") shouldBe true
             })
@@ -63,7 +63,7 @@ class AbstractConsumerTest {
     fun testExceptionHandler(context: TestContext) {
         consumer.addExceptionHandler(TestExceptionHandler(true))
         rule.vertx().deployVerticle(consumer, context.asyncAssertSuccess(){
-            connector.send(JsonObject().put("key", "failure"), context.asyncAssertSuccess() {
+            consumer.send(JsonObject().put("key", "failure"), context.asyncAssertSuccess() {
                 connector.messages.size shouldBe 1
                 connector.messages[0].body().containsKey("handled") shouldBe true
             })

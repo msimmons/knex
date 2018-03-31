@@ -20,19 +20,10 @@ class MockConnector(
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    lateinit var vertx: Vertx
     val messages = mutableListOf<Message<JsonObject>>()
     val failedMessages = mutableListOf<Message<JsonObject>>()
 
-    /**
-     * Send a message for a consumer as if it came from the external [Connector]
-     */
-    fun send(message: JsonObject, handler: Handler<AsyncResult<Message<JsonObject>>>) {
-        vertx.eventBus().send(address, message, handler)
-    }
-
     override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
-        this.vertx = vertx
         vertx.eventBus().consumer<JsonObject>(address, messageHandler)
         startHandler.handle(Future.succeededFuture())
     }
