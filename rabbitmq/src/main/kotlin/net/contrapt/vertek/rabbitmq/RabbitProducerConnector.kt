@@ -16,12 +16,13 @@ import net.contrapt.vertek.endpoints.ProducerConnector
  */
 class RabbitProducerConnector(
     val connectionFactory: ConnectionFactory,
-    override val address: String,
     val exchange: String,
     val routingKey: String
 ) : ProducerConnector {
 
     private val logger = LoggerFactory.getLogger(javaClass)
+
+    override val address = routingKey
 
     lateinit var client : RabbitClient
 
