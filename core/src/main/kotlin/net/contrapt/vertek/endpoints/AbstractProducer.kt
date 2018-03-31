@@ -19,14 +19,15 @@ abstract class AbstractProducer(connector: ProducerConnector) : AbstractEndpoint
     private val defaultHandler = Handler<AsyncResult<Message<JsonObject>>> {}
 
     /**
-     * Publishes the given [Message] on the [EventBus].  Contents of message body are [Connector] specific
+     * Publishes the given [Message] to this [Producer]'s [Connector].  [Message] contents are typically [Connector]
+     * specific
      */
     fun send(message: Message<JsonObject>, handler: Handler<AsyncResult<Message<JsonObject>>> = defaultHandler) {
         vertx.eventBus().send(connector.address, message.body(), DeliveryOptions().setHeaders(message.headers()), handler)
     }
 
     /**
-     * Publishes the given [JsonObject] body as a [Message] on the [EventBus]
+     * Publishes the given [JsonObject] body as a [Message] to this [Connector]
      */
     fun send(body: JsonObject, handler: Handler<AsyncResult<Message<JsonObject>>> = defaultHandler) {
         vertx.eventBus().send(connector.address, body, DeliveryOptions(), handler)
@@ -34,7 +35,8 @@ abstract class AbstractProducer(connector: ProducerConnector) : AbstractEndpoint
 
     /**
      * Handles consuming from the [EventBus], processing [Plug]s and [handleMessage] possibly producing new payload to
-     * be published
+     * be published via the [Connector].  Unhandled exceptions will cause the [Connector]'s [handleFailure] method
+     * to be called
      */
     final override fun handle(message : Message<JsonObject>) {
         vertx.executeBlocking(Handler { future ->

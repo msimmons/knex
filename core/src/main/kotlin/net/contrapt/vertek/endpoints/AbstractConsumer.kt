@@ -15,8 +15,8 @@ import net.contrapt.vertek.plugs.Plug
 abstract class AbstractConsumer(connector: ConsumerConnector) : AbstractEndpoint(connector) {
 
     /**
-     * Handle the incoming [message] by first applying [Plug]s then executing this classes [handleMessage].  Any
-     * unhandled exceptions will result in message being nacked if [autoAck] is not set
+     * Handle the incoming [Message] by first applying [Plug]s then executing this class's [handleMessage] method.  Any
+     * unhandled exceptions will result in the [Connector]'s [handleFailure] method being called
      */
     final override fun handle(message: Message<JsonObject>) {
         // TODO What if you want a transaction around message handling?
