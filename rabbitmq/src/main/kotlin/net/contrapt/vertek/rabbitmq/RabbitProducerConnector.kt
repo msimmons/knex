@@ -11,36 +11,46 @@ import io.vertx.core.logging.LoggerFactory
 import net.contrapt.vertek.endpoints.ProducerConnector
 
 /**
- * Represents the configuration of a message bus endpoint that we would like to
- * send a message to
+ * Bridge the [EventBus] at the address defined by [routingKey] to publish to a RabbitMQ broker.  The provided
+ * [messageHandler] will consume from the bus and successful handling will result in a [basicPublish] of the message
  */
 class RabbitProducerConnector(
-    val connectionFactory: ConnectionFactory,
-    val exchange: String,
-    val routingKey: String
+        val connectionFactory: ConnectionFactory,
+        val exchange: String,
+        val routingKey: String
 ) : ProducerConnector {
 
     private val logger = LoggerFactory.getLogger(javaClass)
-
     override val address = routingKey
+    private lateinit var client: RabbitClient
 
-    lateinit var client : RabbitClient
-
-    override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
-        client = RabbitClient.create(vertx, connectionFactory)
-        client.start(clientStartupHandler(vertx, messageHandler, startHandler))
+    override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, started: Future<Unit>) {
+        synchronized(this, {
+            if (::client.isInitialized) {
+                started.complete()
+                return
+            }
+            client = RabbitClient.create(vertx, connectionFactory)
+        })
+        doStartup(vertx, messageHandler, started)
     }
 
-    private fun clientStartupHandler(vertx: Vertx, handler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) = Handler<AsyncResult<Unit>> { ar ->
-        if ( ar.succeeded() ) {
-            logger.info("Rabbit client connected")
-            logger.info("Publishing address $address -> $exchange:$routingKey")
+    private fun doStartup(vertx: Vertx, handler: Handler<Message<JsonObject>>, started: Future<Unit>) {
+        val start = Future.future<Unit>()
+        val finish = Future.future<Unit>().apply {
+            setHandler {
+                if (it.failed()) {
+                    started.fail(it.cause())
+                }
+            }
+        }
+        client.start(start.completer())
+        start.compose({
+            logger.info("Rabbit client connected at ${connectionFactory.host}")
             vertx.eventBus().consumer<JsonObject>(address, handler)
-            startHandler.handle(Future.succeededFuture())
-        }
-        else {
-            startHandler.handle(Future.failedFuture(ar.cause()))
-        }
+            logger.info("Publishing $address -> $exchange:$routingKey")
+            started.complete()
+        }, finish)
     }
 
     override fun handleFailure(message: Message<JsonObject>, cause: Throwable) {
@@ -55,11 +65,10 @@ class RabbitProducerConnector(
      * Invoke [basicPublish] to publish the message to rabbit
      */
     private fun basicPublish(message: Message<JsonObject>) {
-        client.basicPublish(exchange, routingKey, message.body(), Handler<AsyncResult<Unit>> {ar ->
-            if ( ar.succeeded() ) {
+        client.basicPublish(exchange, routingKey, message.body(), Handler<AsyncResult<Unit>> { ar ->
+            if (ar.succeeded()) {
                 message.reply(JsonObject())
-            }
-            else {
+            } else {
                 logger.error("Error publishing message: $message", ar.cause())
                 message.fail(500, ar.cause().message)
             }

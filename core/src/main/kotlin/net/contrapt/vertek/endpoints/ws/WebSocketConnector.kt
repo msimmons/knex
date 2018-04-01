@@ -1,6 +1,5 @@
 package net.contrapt.vertek.endpoints.ws
 
-import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
@@ -9,15 +8,16 @@ import io.vertx.core.json.JsonObject
 import net.contrapt.vertek.endpoints.ConsumerConnector
 
 /**
- * Consumes messages routed by web socket connection
+ * Consumes messages routed by the [SockJSHandler] via its [bridge] feature.  The [Message]s are bridged to the given
+ * address and handled by the given [messageHandler]
  */
 class WebSocketConnector(
     override val address: String
 ) : ConsumerConnector {
 
-    override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
+    override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, started: Future<Unit>) {
         vertx.eventBus().consumer<JsonObject>(address, messageHandler)
-        startHandler.handle(Future.succeededFuture())
+        started.complete()
     }
 
     override fun handleFailure(message: Message<JsonObject>, cause: Throwable) {

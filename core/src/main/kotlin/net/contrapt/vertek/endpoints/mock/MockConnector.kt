@@ -1,6 +1,5 @@
 package net.contrapt.vertek.endpoints.mock
 
-import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
@@ -11,8 +10,9 @@ import net.contrapt.vertek.endpoints.ConsumerConnector
 import net.contrapt.vertek.endpoints.ProducerConnector
 
 /**
- * A [Connector] to facilitate testing
- * TODO What does it do?
+ * A [Connector] to facilitate testing.  The [MockConnector] keeps track of successful and failed messages that pass
+ * through it so that your tests can verify expectations.  This can be used as a [ConsumerConnector] or a
+ * [ProducerConnector]
  */
 class MockConnector(
     override val address: String
@@ -23,9 +23,9 @@ class MockConnector(
     val messages = mutableListOf<Message<JsonObject>>()
     val failedMessages = mutableListOf<Message<JsonObject>>()
 
-    override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, startHandler: Handler<AsyncResult<Unit>>) {
+    override fun start(vertx: Vertx, messageHandler: Handler<Message<JsonObject>>, started: Future<Unit>) {
         vertx.eventBus().consumer<JsonObject>(address, messageHandler)
-        startHandler.handle(Future.succeededFuture())
+        started.complete()
     }
 
     override fun handleFailure(message: Message<JsonObject>, cause: Throwable) {

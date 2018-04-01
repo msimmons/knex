@@ -15,6 +15,7 @@ private typealias Builder = AMQP.BasicProperties.Builder
 /**
  * Helps to manage transfer of rabbit message properties to and from message representation
  */
+@Suppress("UNCHECKED_CAST")
 enum class RabbitProperty(private val getter: Method, private val setter: Method, val klass: KClass<*>) {
 
     contentType(Properties::getContentType.javaMethod!!, Builder::contentType.javaMethod!!, String::class),

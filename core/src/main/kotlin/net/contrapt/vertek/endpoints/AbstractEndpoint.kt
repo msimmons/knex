@@ -3,6 +3,7 @@ package net.contrapt.vertek.endpoints
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
 import io.vertx.core.Handler
+import io.vertx.core.Verticle
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
@@ -12,7 +13,8 @@ import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.jvm.jvmName
 
 /**
- * Interface and default implementations for consumers and producers
+ * An [AbstractEndpoint] uses a [Connector] to communicate with the outside world.  It defines message handling in its
+ * [handle] method, pipelined transformations via [Plugs]s and exception handling via [ExceptionHandler]s
  */
 abstract class AbstractEndpoint(val connector: Connector) : AbstractVerticle(), Handler<Message<JsonObject>> {
 
@@ -22,28 +24,59 @@ abstract class AbstractEndpoint(val connector: Connector) : AbstractVerticle(), 
     private val exceptionHandlers = mutableListOf<Pair<KClass<out Throwable>?, ExceptionHandler>>()
 
     /**
-     * Start this producer [Verticle] by starting the [Connector] and if successful calling [startupInternal]
-     * TODO We probably need to allow for doing things before the [Connector] starts and maybe after it starts
+     * Start this endpoint [Verticle] by starting the [Connector]. Code defined in [beforeConnector] will run first,
+     * followed by the [Connector]'s [start] method then code defined in [afterConnector].  The given [Future] will
+     * be failed if any step fails
      */
     final override fun start(future: Future<Void>) {
-        connector.start(vertx, this, Handler { ar ->
-            if ( ar.succeeded() ) {
-                startInternal()
-                future.complete()
+        val failure = Future.future<Unit>()
+        failure.setHandler {
+            if (it.failed()) {
+                future.fail(it.cause())
             }
-            else {
-                future.fail(ar.cause())
-            }
+        }
+        val before = Future.future<Unit>()
+        beforeConnector(before)
+        before.compose {
+            val connect = Future.future<Unit>()
+            connector.start(vertx, this, connect)
+            connect
+        }.compose {
+            val after = Future.future<Unit>()
+            afterConnector(after)
+            after
+        }.compose({
+            future.complete()
+        }, failure)
+    }
+
+    /**
+     * Deploy the given verticles sequentially, if any fail, fail the given [Future]
+     */
+    fun deployVerticles(verticles: Array<Verticle>, future: Future<Unit>) {
+        if (verticles.size == 0) {
+            future.complete()
+            return
+        }
+        vertx.deployVerticle(verticles.first(), {
+            if (it.failed()) future.fail(it.cause())
+            else deployVerticles(verticles.sliceArray(1..(verticles.size - 1)), future)
         })
     }
 
     /**
-     * Override to define additional startup code
+     * Override to define additional startup code to be executed before the [Connector] is started, such as start other
+     * dependent components
      */
-    open fun startInternal() {}
+    open fun beforeConnector(future: Future<Unit>) { future.complete() }
 
     /**
-     * Add a [MessagePlug] to the inbound processing stream.  Plugs are executed in the order they are added
+     * Override to define additional startup code executed after the connector is started
+     */
+    open fun afterConnector(future: Future<Unit>) { future.complete() }
+
+    /**
+     * Add a [MessagePlug] to the processing stream.  [Plug]s are executed in the order they are added
      */
     fun addPlug(plug: MessagePlug) {
         plugs.add(plug)
@@ -51,7 +84,7 @@ abstract class AbstractEndpoint(val connector: Connector) : AbstractVerticle(), 
 
     /**
      * Add an [ExceptionHandler]. They are called in the order added for the given [Throwable] or any superclasses
-     * of it until on of the handlers returns [true] or the end of the list is reached.  If no handlers return [true],
+     * of it until one of the handlers returns [true] or the end of the list is reached.  If no handlers return [true],
      * then the [Connector]'s failure handler is called
      */
     fun addExceptionHandler(handler: ExceptionHandler, klass: KClass<out Throwable>? = null) {
