@@ -6,7 +6,7 @@ import org.springframework.context.support.beans
 
 object ServiceConfig {
 
-    val context = beans {
+    fun context() = beans {
         bean() { SimpleService.Impl() }
         bean() { ResultService.Impl() }
 

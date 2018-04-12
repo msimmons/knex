@@ -1,17 +1,26 @@
 package net.contrapt.vertek.example
 
 import com.rabbitmq.client.ConnectionFactory
+import io.vertx.core.Vertx
+import net.contrapt.vertek.endpoints.AbstractEndpoint
 import net.contrapt.vertek.example.route.ResultConsumer
 import net.contrapt.vertek.example.route.SimpleConsumer
 import net.contrapt.vertek.example.route.SimpleProducer
 import net.contrapt.vertek.rabbitmq.RabbitConsumerConnector
 import net.contrapt.vertek.rabbitmq.RabbitProducerConnector
-import org.springframework.context.support.BeanDefinitionDsl
+import org.springframework.context.ApplicationContext
 import org.springframework.context.support.beans
 
-object RouteConfig {
+object BrokerConfig {
 
-    val context = beans {
+    fun startup(vertx: Vertx, context: ApplicationContext) {
+        context.getBeansOfType(AbstractEndpoint::class.java).values.forEach {
+            //logger.info("Deploying ${it::class.qualifiedName}")
+            vertx.deployVerticle(it)
+        }
+    }
+
+    fun context() = beans {
         val actor = "example"
 
         bean {
@@ -42,7 +51,6 @@ object RouteConfig {
             val connector = RabbitProducerConnector(ref(), "amq.topic", "${actor}.created.foo")
             SimpleProducer(connector)
         }
-
 
     }
 }

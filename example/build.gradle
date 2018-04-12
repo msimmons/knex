@@ -1,9 +1,7 @@
 dependencies {
     compile project(':rabbitmq')
-    compile "io.vertx:vertx-config:$vertx_version"
     compile "ch.qos.logback:logback-classic:1.2.3"
     compile "org.springframework:spring-context:$spring_version"
-    //compile 'com.github.salomonbrys.kodein:kodein:4.1.0'
 }
 
 jar {
