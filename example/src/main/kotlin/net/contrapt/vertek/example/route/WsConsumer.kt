@@ -8,6 +8,7 @@ import net.contrapt.vertek.endpoints.ConsumerConnector
 class WsConsumer(connector: ConsumerConnector) : AbstractConsumer(connector) {
 
     override fun handleMessage(message: Message<JsonObject>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        logger.info("Got Message: ${message.body().encode()} ${message.replyAddress()}")
+        message.reply(JsonObject().put("firstName", "Mark").put("age", 30).encode())
     }
 }

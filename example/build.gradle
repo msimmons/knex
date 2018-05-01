@@ -2,6 +2,7 @@ dependencies {
     compile project(':rabbitmq')
     compile "ch.qos.logback:logback-classic:1.2.3"
     compile "org.springframework:spring-context:$spring_version"
+    compile "org.mongodb:mongodb-driver:$mongo_version"
 }
 
 jar {

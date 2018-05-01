@@ -26,7 +26,7 @@ class Application {
 
     fun startup(vertx: Vertx, context: GenericApplicationContext) {
         // Start database, do migrations
-        DatabaseConfig.startup(vertx, context)
+        DatabaseConfig.startup(context)
 
         // Start Broker
         BrokerConfig.startup(vertx, context)
@@ -39,7 +39,7 @@ class Application {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            LogSetter.intitialize("DEBUG")
+            LogSetter.intitialize("INFO")
             Application().run()
         }
     }
