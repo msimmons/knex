@@ -14,6 +14,7 @@ object RouterConfig {
     fun startup(vertx: Vertx, context: ApplicationContext) {
         val wsRouter = WebSocketRouter(vertx, "/ws/V1", setOf())
         val restRouter = RestRouter(vertx, "/api/V1")
+        vertx.deployVerticle(context.getBean(WsConsumer::class.java))
         val router = MainRouter(listOf(wsRouter.router(), restRouter.router()))
         vertx.deployVerticle(router)
     }
@@ -21,11 +22,8 @@ object RouterConfig {
     fun context() = beans {
 
         bean {
-
-            bean {
-                val connector = WebSocketConnector("example.ws1.whatever")
-                WsConsumer(connector)
-            }
+            val connector = WebSocketConnector("example.ws1.whatever")
+            WsConsumer(connector)
         }
     }
 }

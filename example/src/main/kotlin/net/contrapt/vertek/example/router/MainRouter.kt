@@ -12,6 +12,6 @@ class MainRouter(private val subRouters: Collection<Router>) : AbstractVerticle(
             router.mountSubRouter("/example", it)
         }
         val server = vertx.createHttpServer()
-        server.requestHandler(router::accept).listen(8080)
+       server.requestHandler(router::accept).listen(9000)
     }
 }

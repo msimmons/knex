@@ -12,6 +12,9 @@ import io.vertx.core.json.JsonObject
  */
 interface Connector {
 
+    /**
+     * The event bus bridge address
+     */
     val address: String
 
     /**

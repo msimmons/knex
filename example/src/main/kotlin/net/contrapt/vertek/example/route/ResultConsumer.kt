@@ -6,6 +6,8 @@ import io.vertx.core.json.JsonObject
 import net.contrapt.vertek.endpoints.AbstractConsumer
 import net.contrapt.vertek.endpoints.ConsumerConnector
 import net.contrapt.vertek.endpoints.ProducerConnector
+import net.contrapt.vertek.example.plugs.InboundProcessor
+import net.contrapt.vertek.example.plugs.Tracer
 import net.contrapt.vertek.example.service.ResultService
 
 /**
@@ -21,13 +23,17 @@ class ResultConsumer (
     private val resultProducer = ResultProducer(resultConnector)
     private val errorProducer = ErrorProducer(errorConnector)
 
+    init {
+        addPlug(InboundProcessor())
+        addPlug(Tracer().inbound)
+    }
+
     override fun beforeConnector(future: Future<Unit>) {
         addExceptionHandler(DefaultExceptionHandler(errorProducer))
         deployVerticles(arrayOf(errorProducer, resultProducer), future)
     }
 
     override fun handleMessage(message: Message<JsonObject>) {
-        logger.info("Handling message $message")
         resultService.doSomething()
         resultProducer.send(message)
     }

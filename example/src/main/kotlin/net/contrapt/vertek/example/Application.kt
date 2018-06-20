@@ -39,7 +39,7 @@ class Application {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            LogSetter.intitialize("DEBUG")
+            LogSetter.intitialize("INFO")
             Application().run()
         }
     }

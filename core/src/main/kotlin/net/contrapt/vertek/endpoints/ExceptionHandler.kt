@@ -7,7 +7,8 @@ interface ExceptionHandler {
 
     /**
      * Handle an exception in message processing returning whether or not to consider the exception as handled.  If
-     * the exception is handled, message flow continues as successful, otherwise as failure
+     * the exception is handled, message flow continues as successful, otherwise subsequent handlers are called until
+     * exception is handled or there are no more handlers in which case processing is considered _failed_
      *
      * @param message The message being handled
      * @param exception The exception thrown

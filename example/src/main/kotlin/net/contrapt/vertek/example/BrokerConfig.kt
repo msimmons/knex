@@ -24,7 +24,6 @@ object BrokerConfig {
         val actor = "example"
 
         bean {
-
             ConnectionFactory().apply {
                 host = env.getProperty("rabbit.host", "localhost")
                 isAutomaticRecoveryEnabled = true
