@@ -35,6 +35,7 @@ class ResultConsumer (
 
     override fun handleMessage(message: Message<JsonObject>) {
         resultService.doSomething()
+        vertx.eventBus().send("example.simple", message.body())
         resultProducer.send(message)
     }
 

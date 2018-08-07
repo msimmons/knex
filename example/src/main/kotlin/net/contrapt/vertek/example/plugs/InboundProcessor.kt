@@ -10,12 +10,17 @@ class InboundProcessor : MessagePlug {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     /**
-     * Turn the message into a JSON object
+     * Convert incoming body into appropriate format -- (for us a JSON object)
      */
     override fun process(message: Message<JsonObject>) {
-        val json = JsonObject(message.body().getString("body"))
-        message.body().put("body", json)
-        val properties = message.body().getJsonObject("properties")
-        logger.info("MESSAGE correlationId=${properties.getString("correlationId")} direction=in")
+        val bodyObject = message.body().getValue("body")
+        val body = when (bodyObject) {
+            is String -> JsonObject(bodyObject)
+            is JsonObject -> bodyObject
+            else -> JsonObject()
+        }
+        message.body().put("body", body)
+        val properties = message.body().getJsonObject("properties", JsonObject())
+        //logger.info("MESSAGE ${properties} direction=in")
     }
 }

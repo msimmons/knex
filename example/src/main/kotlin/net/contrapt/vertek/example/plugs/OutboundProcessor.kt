@@ -10,12 +10,17 @@ class OutboundProcessor : MessagePlug {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     /**
-     * Turn the message into a JSON object
+     * Make sure the message is a json string for outbound
      */
     override fun process(message: Message<JsonObject>) {
-        val json = message.body().getJsonObject("body")
-        message.body().put("body", json.encode())
+        val bodyObject = message.body().getValue("body")
+        val body = when (bodyObject) {
+            is String -> bodyObject
+            is JsonObject -> bodyObject.encode()
+            else -> ""
+        }
+        message.body().put("body", body)
         val properties = message.body().getJsonObject("properties")
-        logger.info("MESSAGE correlationId=${properties.getString("correlationId")} direction=out")
+        //logger.info("MESSAGE ${properties} direction=out")
     }
 }

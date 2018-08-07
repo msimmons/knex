@@ -13,7 +13,7 @@ class Tracer {
 
     val inbound = object : MessagePlug {
         override fun process(message: Message<JsonObject>) {
-            val routingKey = message.body().getString("routingKey")
+            val routingKey = message.body().getString("routingKey", "?")
             val properties = message.body().getJsonObject("properties", JsonObject())
             val headers = properties.getJsonObject("headers", JsonObject())
             when (headers.getString("trace_id")) {
