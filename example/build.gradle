@@ -2,7 +2,9 @@ dependencies {
     compile project(':rabbitmq')
     compile "ch.qos.logback:logback-classic:1.2.3"
     compile "org.springframework:spring-context:$spring_version"
-    compile group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: '9.0.7'
+    compile group: 'com.zaxxer', name: 'HikariCP', version: hikari_version
+    compile group: 'org.jdbi', name: 'jdbi3-core', version: jdbi_version
+    compile group: 'org.jdbi', name: 'jdbi3-kotlin', version: jdbi_version
     compile group: 'org.flywaydb', name: 'flyway-core', version: '5.0.7'
     compile "org.postgresql:postgresql:42.2.2"
 }
