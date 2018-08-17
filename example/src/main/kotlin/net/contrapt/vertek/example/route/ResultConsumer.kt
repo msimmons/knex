@@ -34,8 +34,10 @@ class ResultConsumer (
     }
 
     override fun handleMessage(message: Message<JsonObject>) {
-        resultService.doSomething()
-        vertx.eventBus().send("example.simple", message.body())
+        val user = resultService.doSomething()
+        val userObj = JsonObject.mapFrom(user)
+        vertx.eventBus().send("example.simple", userObj)
+        message.body().getJsonObject("body").put("user", userObj)
         resultProducer.send(message)
     }
 

@@ -10,7 +10,7 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Types
 
-abstract class JSONBArgument<T> : AbstractArgumentFactory<T>(Types.JAVA_OBJECT) {
+abstract class JSONBArgument<T> : AbstractArgumentFactory<T>(Types.VARCHAR) {
     private val mapper = ObjectMapper()
     override fun build(value: T, config: ConfigRegistry): Argument? {
         return object : Argument {

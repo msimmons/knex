@@ -8,7 +8,7 @@ object ServiceConfig {
 
     fun context() = beans {
         bean() { SimpleService.Impl() }
-        bean() { ResultService.Impl() }
+        bean() { ResultService(ref()) }
 
     }
 }

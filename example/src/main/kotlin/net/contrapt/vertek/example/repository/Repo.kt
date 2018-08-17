@@ -4,7 +4,7 @@ import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.Jdbi
 import java.io.Closeable
 
-abstract class Repo(val jdbi: Jdbi) {
+class Repo(val jdbi: Jdbi) {
 
     protected val txns = ThreadLocal<Transaction>()
 
@@ -21,9 +21,9 @@ abstract class Repo(val jdbi: Jdbi) {
         }
     }
 
-    public fun <R> inTransaction(rollbackOnly: Boolean = false, block: Repo.() -> R) : R {
-        val handle = txns.get()
-        return when (handle) {
+    fun <R> inTransaction(rollbackOnly: Boolean = false, block: () -> R) : R {
+        val txn = txns.get()
+        return when (txn) {
             null -> beginTxn(rollbackOnly).use { t ->
                 val result = block()
                 endTxn(t)
@@ -33,7 +33,7 @@ abstract class Repo(val jdbi: Jdbi) {
         }
     }
 
-    protected fun <R> withHandle(block: Handle.() -> R) : R {
+    fun <R> withHandle(block: Handle.() -> R) : R {
         val txn = txns.get()
         return when (txn) {
             null -> beginTxn(false).use { t ->
@@ -51,8 +51,15 @@ abstract class Repo(val jdbi: Jdbi) {
     ) : Closeable {
 
         override fun close() {
-            println("Closing the txn ${handle}")
-            this@Repo.txns.remove()
+            val txn = txns.get()
+            when (txn) {
+                null -> {}
+                else -> {
+                    println("Closing the txn ${handle}")
+                    txns.remove()
+                    txn.handle.close()
+                }
+            }
         }
     }
 }

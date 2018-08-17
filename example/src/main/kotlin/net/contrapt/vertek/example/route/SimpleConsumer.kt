@@ -32,8 +32,7 @@ class SimpleConsumer (
     }
 
     override fun handleMessage(message: Message<JsonObject>) {
-        logger.info("Handling message $message")
-        simpleService.doSomething()
+        logger.info("Handling message ${message.body()}")
     }
 
 }

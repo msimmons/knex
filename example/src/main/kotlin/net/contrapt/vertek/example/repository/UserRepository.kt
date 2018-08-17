@@ -1,10 +1,9 @@
 package net.contrapt.vertek.example.repository
 
 import net.contrapt.vertek.example.model.User
-import org.jdbi.v3.core.Jdbi
 import java.util.*
 
-class UserRepository(jdbi: Jdbi) : Repo(jdbi) {
+class UserRepository(repo: Repo) : AbstractRepository(repo) {
 
     fun insert(user: User) {
         withHandle {
