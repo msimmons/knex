@@ -14,34 +14,6 @@ import javax.sql.DataSource
 
 object DatabaseConfig {
 
-<<<<<<< HEAD
-    fun startup(context: ApplicationContext) {
-        // Here we could do data migrations, ensure indices stuff like that
-        val mongoDb = context.getBean(MongoDatabase::class.java)
-        mongoDb.getCollection("users").apply {
-            createIndex(Indexes.ascending("email"), IndexOptions().unique(true))
-        }
-    }
-
-    fun context() = beans {
-        bean("pojoRegistry") {
-            fromRegistries(
-                    MongoClient.getDefaultCodecRegistry(),
-                    fromProviders(PojoCodecProvider.builder().automatic(true).build())
-            )
-        }
-        bean("mongoClient") {
-            val mongoHost = env.getProperty("mongo.host", "localhost")
-            val options = MongoClientOptions.builder()
-                    .codecRegistry(ref("pojoRegistry"))
-                    .build()
-            MongoClient(mongoHost, options)
-        }
-        bean("mongoDb") {
-            val mongoDb = env.getProperty("mongo.db", "auth")
-            val mongoClient : MongoClient = ref()
-            mongoClient.getDatabase(mongoDb)
-=======
     fun startup(vertx: Vertx, context: ApplicationContext) {
         val flyway = context.getBean("flyway", Flyway::class.java)
         flyway.migrate()
@@ -89,7 +61,6 @@ object DatabaseConfig {
 
         bean() {
             UserRepository(ref())
->>>>>>> 01318cfb7791ab827e43dbd3a42ec12e7efd0e17
         }
     }
 }
