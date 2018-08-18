@@ -14,7 +14,7 @@ import javax.sql.DataSource
 
 object DatabaseConfig {
 
-    fun startup(vertx: Vertx, context: ApplicationContext) {
+    fun startup(context: ApplicationContext) {
         val flyway = context.getBean("flyway", Flyway::class.java)
         flyway.migrate()
     }

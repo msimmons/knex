@@ -1,6 +1,5 @@
 package net.contapt.knex.example.service
 
-import com.mongodb.client.MongoDatabase
 import net.contrapt.knex.example.DatabaseConfig
 import net.contrapt.knex.example.ServiceConfig
 import org.junit.Before
@@ -23,8 +22,6 @@ abstract class AbstractServiceTest {
 
     @Before
     fun before() {
-        val mongoDb = autowire<MongoDatabase>()
-        mongoDb.drop()
         DatabaseConfig.startup(context)
     }
 
