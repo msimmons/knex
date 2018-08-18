@@ -1,4 +1,4 @@
-package net.contrapt.vertek.endpoints
+package net.contrapt.knex.endpoints
 
 import io.vertx.core.Future
 import io.vertx.core.Handler

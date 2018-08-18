@@ -1,4 +1,4 @@
-package net.contrapt.vertek.example.route
+package net.contrapt.knex.example.route
 
 import io.kotlintest.matchers.shouldBe
 import io.kotlintest.mock.mock
@@ -6,8 +6,8 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.RunTestOnContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
-import net.contrapt.vertek.endpoints.mock.MockConnector
-import net.contrapt.vertek.example.service.ResultService
+import net.contrapt.knex.endpoints.mock.MockConnector
+import net.contrapt.knex.example.service.ResultService
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

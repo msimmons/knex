@@ -1,4 +1,4 @@
-package net.contrapt.vertek.endpoints
+package net.contrapt.knex.endpoints
 
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
@@ -7,7 +7,7 @@ import io.vertx.core.Verticle
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
-import net.contrapt.vertek.plugs.MessagePlug
+import net.contrapt.knex.plugs.MessagePlug
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.jvm.jvmName

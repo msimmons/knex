@@ -1,4 +1,4 @@
-package net.contrapt.vertek.endpoints.mock
+package net.contrapt.knex.endpoints.mock
 
 import io.vertx.core.Future
 import io.vertx.core.Handler
@@ -6,8 +6,8 @@ import io.vertx.core.Vertx
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
-import net.contrapt.vertek.endpoints.ConsumerConnector
-import net.contrapt.vertek.endpoints.ProducerConnector
+import net.contrapt.knex.endpoints.ConsumerConnector
+import net.contrapt.knex.endpoints.ProducerConnector
 
 /**
  * A [Connector] to facilitate testing.  The [MockConnector] keeps track of successful and failed messages that pass
@@ -29,7 +29,7 @@ class MockConnector(
     }
 
     override fun handleFailure(message: Message<JsonObject>, cause: Throwable) {
-        message.body().put("vertek.exception", cause.message)
+        message.body().put("knex.exception", cause.message)
         failedMessages.add(message)
         logger.error(message.body(), cause)
         message.reply(message.body())

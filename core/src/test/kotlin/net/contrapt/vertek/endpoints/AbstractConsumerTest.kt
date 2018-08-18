@@ -1,4 +1,4 @@
-package net.contrapt.vertek.endpoints
+package net.contrapt.knex.endpoints
 
 import io.kotlintest.matchers.shouldBe
 import io.vertx.core.eventbus.Message
@@ -7,8 +7,8 @@ import io.vertx.core.logging.LoggerFactory
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.RunTestOnContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
-import net.contrapt.vertek.endpoints.mock.MockConnector
-import net.contrapt.vertek.plugs.MessagePlug
+import net.contrapt.knex.endpoints.mock.MockConnector
+import net.contrapt.knex.plugs.MessagePlug
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

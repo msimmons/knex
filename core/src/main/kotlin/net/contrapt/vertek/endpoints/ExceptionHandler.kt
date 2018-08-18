@@ -1,4 +1,4 @@
-package net.contrapt.vertek.endpoints
+package net.contrapt.knex.endpoints
 
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject

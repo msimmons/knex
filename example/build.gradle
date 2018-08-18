@@ -11,7 +11,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'net.contrapt.vertek.example.Application'
+        attributes 'Main-Class': 'net.contrapt.knex.example.Application'
     }
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }

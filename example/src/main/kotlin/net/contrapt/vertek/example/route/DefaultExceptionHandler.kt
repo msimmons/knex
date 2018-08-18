@@ -1,10 +1,10 @@
-package net.contrapt.vertek.example.route
+package net.contrapt.knex.example.route
 
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
-import net.contrapt.vertek.endpoints.AbstractProducer
-import net.contrapt.vertek.endpoints.ExceptionHandler
+import net.contrapt.knex.endpoints.AbstractProducer
+import net.contrapt.knex.endpoints.ExceptionHandler
 
 class DefaultExceptionHandler(val endpoint: AbstractProducer) : ExceptionHandler {
 

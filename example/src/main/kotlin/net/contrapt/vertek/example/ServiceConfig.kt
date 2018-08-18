@@ -1,6 +1,6 @@
-package net.contrapt.vertek.example
+package net.contrapt.knex.example
 
-import net.contrapt.vertek.example.service.*
+import net.contrapt.knex.example.service.*
 import org.springframework.context.support.beans
 
 object ServiceConfig {

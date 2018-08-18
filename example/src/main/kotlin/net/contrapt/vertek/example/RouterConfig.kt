@@ -1,14 +1,14 @@
-package net.contrapt.vertek.example
+package net.contrapt.knex.example
 
 import io.vertx.core.Vertx
-import net.contrapt.vertek.endpoints.ws.WebSocketConnector
-import net.contrapt.vertek.endpoints.ws.WebSocketRouter
-import net.contrapt.vertek.example.route.WsConsumer
-import net.contrapt.vertek.example.router.MainRouter
-import net.contrapt.vertek.example.router.RestRouter
-import net.contrapt.vertek.example.service.LoginService
-import net.contrapt.vertek.example.service.SignupService
-import net.contrapt.vertek.example.service.VerifyService
+import net.contrapt.knex.endpoints.ws.WebSocketConnector
+import net.contrapt.knex.endpoints.ws.WebSocketRouter
+import net.contrapt.knex.example.route.WsConsumer
+import net.contrapt.knex.example.router.MainRouter
+import net.contrapt.knex.example.router.RestRouter
+import net.contrapt.knex.example.service.LoginService
+import net.contrapt.knex.example.service.SignupService
+import net.contrapt.knex.example.service.VerifyService
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.beans
 

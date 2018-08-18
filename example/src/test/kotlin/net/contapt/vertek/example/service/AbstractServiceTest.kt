@@ -1,8 +1,8 @@
-package net.contapt.vertek.example.service
+package net.contapt.knex.example.service
 
 import com.mongodb.client.MongoDatabase
-import net.contrapt.vertek.example.DatabaseConfig
-import net.contrapt.vertek.example.ServiceConfig
+import net.contrapt.knex.example.DatabaseConfig
+import net.contrapt.knex.example.ServiceConfig
 import org.junit.Before
 import org.springframework.context.support.GenericApplicationContext
 import org.springframework.core.io.support.ResourcePropertySource

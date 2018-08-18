@@ -1,11 +1,11 @@
-package net.contrapt.vertek.endpoints
+package net.contrapt.knex.endpoints
 
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
-import net.contrapt.vertek.plugs.MessagePlug
-import net.contrapt.vertek.plugs.Plug
+import net.contrapt.knex.plugs.MessagePlug
+import net.contrapt.knex.plugs.Plug
 
 /**
  * A consumer of messages.  Concrete subclasses define message handling in [handleMessage] and provide a

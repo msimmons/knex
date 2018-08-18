@@ -1,10 +1,10 @@
-package net.contrapt.vertek.example
+package net.contrapt.knex.example
 
 import com.zaxxer.hikari.HikariDataSource
 import io.vertx.core.Vertx
-import net.contrapt.vertek.example.model.UserData
-import net.contrapt.vertek.example.repository.Repo
-import net.contrapt.vertek.example.repository.UserRepository
+import net.contrapt.knex.example.model.UserData
+import net.contrapt.knex.example.repository.Repo
+import net.contrapt.knex.example.repository.UserRepository
 import org.flywaydb.core.Flyway
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.kotlin.KotlinPlugin

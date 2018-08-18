@@ -1,4 +1,4 @@
-package net.contrapt.vertek.example.model
+package net.contrapt.knex.example.model
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jdbi.v3.core.argument.AbstractArgumentFactory

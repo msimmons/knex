@@ -1,7 +1,7 @@
-package net.contrapt.vertek.example.service
+package net.contrapt.knex.example.service
 
-import net.contrapt.vertek.example.model.User
-import net.contrapt.vertek.example.repository.UserRepository
+import net.contrapt.knex.example.model.User
+import net.contrapt.knex.example.repository.UserRepository
 import java.util.*
 
 class SignupService(val repository: UserRepository) {

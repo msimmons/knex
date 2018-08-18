@@ -11,11 +11,11 @@ buildscript {
 subprojects {
     apply plugin: 'kotlin'
 
-    group = 'net.contrapt.vertek'
+    group = 'net.contrapt.knex'
     version = library_version
 
     jar {
-        baseName = "vertek-${project.name}"
+        baseName = "knex-${project.name}"
     }
     repositories {
         jcenter()

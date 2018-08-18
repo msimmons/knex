@@ -1,12 +1,12 @@
-package net.contrapt.vertek.endpoints
+package net.contrapt.knex.endpoints
 
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
-import net.contrapt.vertek.plugs.MessagePlug
-import net.contrapt.vertek.plugs.Plug
+import net.contrapt.knex.plugs.MessagePlug
+import net.contrapt.knex.plugs.Plug
 
 /**
  * A producer of messages via the [send] methods.  The [ProducerConnector] defines the external publishing

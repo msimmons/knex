@@ -1,4 +1,4 @@
-package net.contrapt.vertek.example
+package net.contrapt.knex.example
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger

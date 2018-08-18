@@ -1,10 +1,10 @@
-package net.contrapt.vertek.example.plugs
+package net.contrapt.knex.example.plugs
 
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
-import net.contrapt.vertek.plugs.MessagePlug
-import net.contrapt.vertek.rabbitmq.RabbitProperty
+import net.contrapt.knex.plugs.MessagePlug
+import net.contrapt.knex.rabbitmq.RabbitProperty
 import java.time.Instant
 
 class Tracer {

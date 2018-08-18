@@ -1,9 +1,9 @@
-package net.contrapt.vertek.example.route
+package net.contrapt.knex.example.route
 
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
-import net.contrapt.vertek.endpoints.AbstractConsumer
-import net.contrapt.vertek.endpoints.ConsumerConnector
+import net.contrapt.knex.endpoints.AbstractConsumer
+import net.contrapt.knex.endpoints.ConsumerConnector
 
 class WsConsumer(connector: ConsumerConnector) : AbstractConsumer(connector) {
 

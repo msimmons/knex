@@ -1,9 +1,9 @@
-package net.contrapt.vertek.example.service
+package net.contrapt.knex.example.service
 
 import io.vertx.core.logging.Logger
 import io.vertx.core.logging.LoggerFactory
-import net.contrapt.vertek.example.model.User
-import net.contrapt.vertek.example.repository.UserRepository
+import net.contrapt.knex.example.model.User
+import net.contrapt.knex.example.repository.UserRepository
 
 class ResultService(val userRepository: UserRepository) {
 

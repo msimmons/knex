@@ -1,4 +1,4 @@
-package net.contrapt.vertek.rabbitmq
+package net.contrapt.knex.rabbitmq
 
 import com.rabbitmq.client.*
 import com.rabbitmq.client.impl.recovery.AutorecoveringConnection

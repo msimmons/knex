@@ -1,4 +1,4 @@
-package net.contrapt.vertek.plugs
+package net.contrapt.knex.plugs
 
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject

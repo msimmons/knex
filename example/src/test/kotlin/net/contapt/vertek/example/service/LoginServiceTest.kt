@@ -1,10 +1,10 @@
-package net.contapt.vertek.example.service
+package net.contapt.knex.example.service
 
 import com.mongodb.client.MongoDatabase
 import io.kotlintest.matchers.shouldBe
 import io.kotlintest.matchers.shouldNotBe
-import net.contrapt.vertek.example.model.User
-import net.contrapt.vertek.example.service.LoginService
+import net.contrapt.knex.example.model.User
+import net.contrapt.knex.example.service.LoginService
 import org.junit.Test
 import java.util.*
 

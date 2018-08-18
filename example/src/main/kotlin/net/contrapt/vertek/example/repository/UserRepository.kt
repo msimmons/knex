@@ -1,6 +1,6 @@
-package net.contrapt.vertek.example.repository
+package net.contrapt.knex.example.repository
 
-import net.contrapt.vertek.example.model.User
+import net.contrapt.knex.example.model.User
 import java.util.*
 
 class UserRepository(repo: Repo) : AbstractRepository(repo) {

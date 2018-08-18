@@ -1,4 +1,4 @@
-package net.contrapt.vertek.rabbitmq
+package net.contrapt.knex.rabbitmq
 
 import com.rabbitmq.client.*
 import io.vertx.core.AsyncResult

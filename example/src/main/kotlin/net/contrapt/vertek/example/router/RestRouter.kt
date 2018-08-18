@@ -1,4 +1,4 @@
-package net.contrapt.vertek.example.router
+package net.contrapt.knex.example.router
 
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
@@ -9,9 +9,9 @@ import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.BodyHandler
-import net.contrapt.vertek.example.service.LoginService
-import net.contrapt.vertek.example.service.SignupService
-import net.contrapt.vertek.example.service.VerifyService
+import net.contrapt.knex.example.service.LoginService
+import net.contrapt.knex.example.service.SignupService
+import net.contrapt.knex.example.service.VerifyService
 
 class RestRouter(
         val vertx: Vertx,

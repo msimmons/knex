@@ -1,14 +1,14 @@
-package net.contrapt.vertek.example
+package net.contrapt.knex.example
 
 import com.rabbitmq.client.ConnectionFactory
 import io.vertx.core.Vertx
-import net.contrapt.vertek.endpoints.AbstractEndpoint
-import net.contrapt.vertek.example.route.LoopConsumer
-import net.contrapt.vertek.example.route.ResultConsumer
-import net.contrapt.vertek.example.route.SimpleConsumer
-import net.contrapt.vertek.example.route.SimpleProducer
-import net.contrapt.vertek.rabbitmq.RabbitConsumerConnector
-import net.contrapt.vertek.rabbitmq.RabbitProducerConnector
+import net.contrapt.knex.endpoints.AbstractEndpoint
+import net.contrapt.knex.example.route.LoopConsumer
+import net.contrapt.knex.example.route.ResultConsumer
+import net.contrapt.knex.example.route.SimpleConsumer
+import net.contrapt.knex.example.route.SimpleProducer
+import net.contrapt.knex.rabbitmq.RabbitConsumerConnector
+import net.contrapt.knex.rabbitmq.RabbitProducerConnector
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.beans
 

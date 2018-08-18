@@ -1,4 +1,4 @@
-package net.contrapt.vertek.rabbitmq
+package net.contrapt.knex.rabbitmq
 
 import com.rabbitmq.client.ConnectionFactory
 import io.vertx.core.AsyncResult
@@ -8,7 +8,7 @@ import io.vertx.core.Vertx
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
-import net.contrapt.vertek.endpoints.ConsumerConnector
+import net.contrapt.knex.endpoints.ConsumerConnector
 
 /**
  * Consume messages routed by the rabbit broker and bridge them to the [EventBus] at the address defined by [queue]

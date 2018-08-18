@@ -1,4 +1,4 @@
-package net.contrapt.vertek.rabbitmq
+package net.contrapt.knex.rabbitmq
 
 import com.rabbitmq.client.ConnectionFactory
 import io.kotlintest.matchers.shouldBe
@@ -9,7 +9,7 @@ import io.vertx.ext.unit.Async
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.RunTestOnContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
-import net.contrapt.vertek.endpoints.AbstractConsumer
+import net.contrapt.knex.endpoints.AbstractConsumer
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

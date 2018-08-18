@@ -1,11 +1,11 @@
-package net.contrapt.vertek.endpoints.ws
+package net.contrapt.knex.endpoints.ws
 
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
-import net.contrapt.vertek.endpoints.ConsumerConnector
+import net.contrapt.knex.endpoints.ConsumerConnector
 
 /**
  * Consumes messages routed by the [SockJSHandler] via its [bridge] feature.  The [Message]s are bridged to the given

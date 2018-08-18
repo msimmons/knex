@@ -1,4 +1,4 @@
-package net.contrapt.vertek.plugs
+package net.contrapt.knex.plugs
 
 import io.vertx.ext.web.handler.sockjs.BridgeEvent
 

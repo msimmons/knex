@@ -1,4 +1,4 @@
-package net.contrapt.vertek.endpoints.ws
+package net.contrapt.knex.endpoints.ws
 
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
@@ -11,8 +11,8 @@ import io.vertx.ext.web.handler.sockjs.SockJSHandler
 import io.vertx.kotlin.ext.web.handler.sockjs.BridgeOptions
 import io.vertx.kotlin.ext.web.handler.sockjs.PermittedOptions
 import io.vertx.kotlin.ext.web.handler.sockjs.SockJSHandlerOptions
-import net.contrapt.vertek.endpoints.AbstractConsumer
-import net.contrapt.vertek.plugs.BridgeEventPlug
+import net.contrapt.knex.endpoints.AbstractConsumer
+import net.contrapt.knex.plugs.BridgeEventPlug
 
 class WebSocketRouter(
         val vertx: Vertx,

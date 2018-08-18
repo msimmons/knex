@@ -1,4 +1,4 @@
-package net.contrapt.vertek.example.model
+package net.contrapt.knex.example.model
 
 import java.time.Instant
 import java.util.*

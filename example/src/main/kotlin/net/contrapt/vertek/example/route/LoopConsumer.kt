@@ -1,11 +1,11 @@
-package net.contrapt.vertek.example.route
+package net.contrapt.knex.example.route
 
 import io.vertx.core.Handler
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
-import net.contrapt.vertek.endpoints.AbstractConsumer
-import net.contrapt.vertek.endpoints.ConsumerConnector
-import net.contrapt.vertek.example.plugs.InboundProcessor
+import net.contrapt.knex.endpoints.AbstractConsumer
+import net.contrapt.knex.endpoints.ConsumerConnector
+import net.contrapt.knex.example.plugs.InboundProcessor
 
 /**
  * A consumer that processes a message and produces a result

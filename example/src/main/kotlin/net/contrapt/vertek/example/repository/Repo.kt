@@ -1,4 +1,4 @@
-package net.contrapt.vertek.example.repository
+package net.contrapt.knex.example.repository
 
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.Jdbi

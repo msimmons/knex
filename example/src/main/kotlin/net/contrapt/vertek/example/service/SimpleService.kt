@@ -1,4 +1,4 @@
-package net.contrapt.vertek.example.service
+package net.contrapt.knex.example.service
 
 import io.vertx.core.logging.Logger
 import io.vertx.core.logging.LoggerFactory

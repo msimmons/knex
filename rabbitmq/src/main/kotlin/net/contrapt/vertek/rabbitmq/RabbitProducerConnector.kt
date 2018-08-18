@@ -1,4 +1,4 @@
-package net.contrapt.vertek.rabbitmq
+package net.contrapt.knex.rabbitmq
 
 import com.rabbitmq.client.ConnectionFactory
 import io.vertx.core.AsyncResult
@@ -8,7 +8,7 @@ import io.vertx.core.Vertx
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.core.logging.LoggerFactory
-import net.contrapt.vertek.endpoints.ProducerConnector
+import net.contrapt.knex.endpoints.ProducerConnector
 
 /**
  * Bridge the [EventBus] at the address defined by [routingKey] to publish to a RabbitMQ broker.  The provided

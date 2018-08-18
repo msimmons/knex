@@ -1,4 +1,4 @@
-package net.contrapt.vertek.example.router
+package net.contrapt.knex.example.router
 
 import io.vertx.core.AbstractVerticle
 import io.vertx.ext.web.Router
