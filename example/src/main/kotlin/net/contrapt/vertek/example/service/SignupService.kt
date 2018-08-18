@@ -1,28 +1,17 @@
 package net.contrapt.vertek.example.service
 
-import com.mongodb.MongoWriteException
-import com.mongodb.client.MongoDatabase
 import net.contrapt.vertek.example.model.User
+import net.contrapt.vertek.example.repository.UserRepository
 import java.util.*
 
-class SignupService(val db: MongoDatabase) {
+class SignupService(val repository: UserRepository) {
 
     operator fun invoke(request: Request) : Response {
-        val users = db.getCollection("users", User::class.java)
         // Hash the password
         // Encrypt the firstname
         // Create and encrypt the profileid
         // Create profileid hash for lookup
-        val user = User(request.email, request.password, request.firstName, UUID.randomUUID().toString())
-        try {
-            users.insertOne(user)
-        } catch (e: MongoWriteException) {
-            when (e.error.code) {
-                11000 -> return Response(null, "User ${request.email} exists already")
-                else -> throw e
-            }
-        }
-        return Response(user)
+        return Response(User())
     }
 
     data class Request(

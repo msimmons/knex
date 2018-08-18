@@ -26,7 +26,7 @@ class Application {
 
     fun startup(vertx: Vertx, context: GenericApplicationContext) {
         // Start database, do migrations
-        DatabaseConfig.startup(context)
+        DatabaseConfig.startup(vertx, context)
 
         // Start Broker
         BrokerConfig.startup(vertx, context)

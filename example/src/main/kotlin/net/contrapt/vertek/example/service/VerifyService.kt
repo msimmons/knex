@@ -1,14 +1,11 @@
 package net.contrapt.vertek.example.service
 
-import com.mongodb.client.MongoDatabase
-import com.mongodb.client.model.Filters.eq
 import net.contrapt.vertek.example.model.User
+import net.contrapt.vertek.example.repository.UserRepository
 
-class VerifyService(val db: MongoDatabase) {
+class VerifyService(val repository: UserRepository) {
 
     operator fun invoke(request: Request) : Response {
-        val users = db.getCollection("users", User::class.java)
-        val user = users.find(eq("email", request.email)).first()
         // Test the verify code
         return Response("atoken")
     }
