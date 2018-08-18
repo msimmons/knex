@@ -21,7 +21,7 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
     private val consumerChannels = mutableMapOf<String, Channel>()
 
     fun start(startupHandler: Handler<AsyncResult<Unit>>) {
-        logger.info("Starting RabbitClient")
+        logger.debug("Starting RabbitClient")
         vertx.executeBlocking(Handler { future ->
             try {
                 connect()
@@ -34,7 +34,7 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
     }
 
     fun stop(stopHandler: Handler<AsyncResult<Unit>>) {
-        logger.info("Stopping RabbitClient")
+        logger.debug("Stopping RabbitClient")
         vertx.executeBlocking(Handler { future ->
             try {
                 disconnect()
@@ -195,10 +195,10 @@ class RabbitClient private constructor(val vertx: Vertx, private val connection:
     }
 
     private fun connect() {
-        logger.debug("Connecting to rabbitmq...")
+        logger.debug("Creating default channels...")
         defaultChannel = connection.createChannel()
         publishChannel = connection.createChannel()
-        logger.debug("Connected to rabbitmq !")
+        logger.debug("Channels created")
     }
 
     private fun disconnect() {

@@ -32,7 +32,10 @@ abstract class AbstractConsumer(connector: ConsumerConnector) : AbstractEndpoint
                     logger.debug("Exception $e handled")
                     future.complete()
                 }
-                else future.fail(e)
+                else {
+                    logger.error("Unhandled exception", e)
+                    future.fail(e)
+                }
             }
         }, false, Handler<AsyncResult<Unit>> {ar ->
             if ( ar.failed() ) connector.handleFailure(message, ar.cause())

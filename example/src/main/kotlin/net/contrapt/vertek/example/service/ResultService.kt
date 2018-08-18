@@ -2,18 +2,19 @@ package net.contrapt.vertek.example.service
 
 import io.vertx.core.logging.Logger
 import io.vertx.core.logging.LoggerFactory
+import net.contrapt.vertek.example.model.User
+import net.contrapt.vertek.example.repository.UserRepository
 
-interface ResultService {
+class ResultService(val userRepository: UserRepository) {
 
-    val logger: Logger
-    val foo : String
+    val logger: Logger = LoggerFactory.getLogger(javaClass)
+    val foo : String = ""
 
-    fun doSomething() {
+    fun doSomething() : User {
         logger.info("In the service doing something")
+        val user = User()
+        userRepository.insert(user)
+        return user
     }
 
-    class Impl : ResultService {
-        override val logger = LoggerFactory.getLogger(javaClass)
-        override lateinit var foo: String
-    }
 }

@@ -46,7 +46,7 @@ class RabbitProducerConnector(
         }
         client.start(start.completer())
         start.compose({
-            logger.info("Rabbit client connected at ${connectionFactory.host}")
+            logger.debug("Rabbit client connected at ${connectionFactory.host}")
             vertx.eventBus().consumer<JsonObject>(address, handler)
             logger.info("Publishing $address -> $exchange:$routingKey")
             started.complete()

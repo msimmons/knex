@@ -1,6 +1,7 @@
 package net.contrapt.vertek.rabbitmq
 
 import com.rabbitmq.client.*
+import com.rabbitmq.client.impl.recovery.AutorecoveringConnection
 import io.vertx.core.logging.LoggerFactory
 import java.lang.Thread.sleep
 
@@ -8,10 +9,9 @@ import java.lang.Thread.sleep
  * A given instance of [RabbitClientConnection] manages a single [Connection] from which a [RabbitClient] can obtain
  * it's [Channel]s
  */
-class RabbitClientConnection(val factory: ConnectionFactory, val retryLimit: Int = 0) : ShutdownListener {
+class RabbitClientConnection(val factory: ConnectionFactory, val retryLimit: Int = 0) : ShutdownListener, RecoveryListener {
 
     private val logger = LoggerFactory.getLogger(javaClass)
-    private var connectionAssigned = false
     private lateinit var connection : Connection
     private var retryCount = 0
 
@@ -19,16 +19,27 @@ class RabbitClientConnection(val factory: ConnectionFactory, val retryLimit: Int
         if ( cause?.isInitiatedByApplication == true ) {
             return
         }
-        logger.info("RabbitMQ connection shutdown! The client will attempt to reconnect automatically", cause)
+        logger.warn("RabbitMQ connection shutdown! The client will attempt to reconnect automatically", cause)
+    }
+
+    override fun handleRecovery(recoverable: Recoverable?) {
+        logger.info("Connection recovered for $recoverable")
+    }
+
+    override fun handleRecoveryStarted(recoverable: Recoverable?) {
+        logger.info("Automatic connection recovery started for $recoverable")
     }
 
     private fun connect() {
-        if ( connectionAssigned && connection.isOpen ) return
+        if ( ::connection.isInitialized && connection.isOpen ) return
         try {
-            logger.info("Attempting to connect to RabbitMQ Broker at ${factory.host}")
-            connection = factory.newConnection()
-            connectionAssigned = true
-            connection.addShutdownListener(this)
+            logger.debug("Attempting to connect to RabbitMQ Broker at ${factory.host}")
+            connection = factory.newConnection().apply {
+                when (this) {
+                    is AutorecoveringConnection -> this.addRecoveryListener(this@RabbitClientConnection)
+                }
+                addShutdownListener(this@RabbitClientConnection)
+            }
         }
         catch(e: Exception ) {
             logger.warn("Unable to connect to RabbitMQ Broker at ${factory.host}", e)
@@ -44,7 +55,7 @@ class RabbitClientConnection(val factory: ConnectionFactory, val retryLimit: Int
     }
 
     fun isOpen() : Boolean {
-        if ( !connectionAssigned ) return false
+        if (!::connection.isInitialized) return false
         return connection.isOpen
     }
 
@@ -54,7 +65,7 @@ class RabbitClientConnection(val factory: ConnectionFactory, val retryLimit: Int
     }
 
     fun close() {
-        if ( !connectionAssigned ) return
+        if (!::connection.isInitialized) return
         connection.close()
     }
 

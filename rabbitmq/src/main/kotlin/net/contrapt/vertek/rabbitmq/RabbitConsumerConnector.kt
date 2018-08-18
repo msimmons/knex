@@ -62,12 +62,12 @@ class RabbitConsumerConnector(
         }
         client.start(start.completer())
         start.compose {
-            logger.info("Rabbit client connected at ${connectionFactory.host}")
+            logger.debug("Rabbit client connected at ${connectionFactory.host}")
             val declare = Future.future<JsonObject>()
             client.queueDeclare(queue, durable, exclusive, autoDelete, args, declare.completer())
             declare
         }.compose {
-            logger.debug("Queue declared")
+            logger.debug("Queue $queue declared")
             val bind = Future.future<Unit>()
             client.queueBind(queue, exchange, routingKey, bind.completer())
             bind

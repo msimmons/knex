@@ -3,6 +3,7 @@ package net.contrapt.vertek.example
 import com.rabbitmq.client.ConnectionFactory
 import io.vertx.core.Vertx
 import net.contrapt.vertek.endpoints.AbstractEndpoint
+import net.contrapt.vertek.example.route.LoopConsumer
 import net.contrapt.vertek.example.route.ResultConsumer
 import net.contrapt.vertek.example.route.SimpleConsumer
 import net.contrapt.vertek.example.route.SimpleProducer
@@ -24,7 +25,6 @@ object BrokerConfig {
         val actor = "example"
 
         bean {
-
             ConnectionFactory().apply {
                 host = env.getProperty("rabbit.host", "localhost")
                 isAutomaticRecoveryEnabled = true
@@ -50,6 +50,11 @@ object BrokerConfig {
         bean {
             val connector = RabbitProducerConnector(ref(), "amq.topic", "${actor}.created.foo")
             SimpleProducer(connector)
+        }
+
+        bean {
+            val connector = RabbitConsumerConnector(ref(), "amq.topic", "#.created.loop", "${actor}.loop")
+            LoopConsumer(connector, ref())
         }
 
     }
