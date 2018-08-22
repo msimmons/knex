@@ -1,9 +1,8 @@
 package net.contrapt.knex.example
 
 import com.zaxxer.hikari.HikariDataSource
-import io.vertx.core.Vertx
 import net.contrapt.knex.example.model.UserData
-import net.contrapt.knex.example.repository.Repo
+import net.contrapt.knex.example.repository.SessionManager
 import net.contrapt.knex.example.repository.UserRepository
 import org.flywaydb.core.Flyway
 import org.jdbi.v3.core.Jdbi
@@ -25,10 +24,11 @@ object DatabaseConfig {
             val host = env.getProperty("example.db.host", "localhost")
             val port = env.getProperty("example.db.port", "5432")
             val database = env.getProperty("example.db.database", "sandbox")
+            val schema = env.getProperty("example.db.schema", "example")
             HikariDataSource().apply {
                 //dataSourceClassName = "org.postgresql.ds.PGSimpleDataSource"
                 driverClassName = "org.postgresql.Driver"
-                jdbcUrl = "jdbc:postgresql://$host:$port/$database"
+                jdbcUrl = "jdbc:postgresql://$host:$port/$database?currentSchema=$schema"
                 username = env.getProperty("example.db.user", "postgres")
                 password = env.getProperty("example.db.password", "password")
                 poolName = "Example Pool"
@@ -55,8 +55,8 @@ object DatabaseConfig {
             }
         }
 
-        bean("repo") {
-            Repo(ref())
+        bean("sessionManager") {
+            SessionManager(ref())
         }
 
         bean() {

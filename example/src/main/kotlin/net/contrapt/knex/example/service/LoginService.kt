@@ -2,12 +2,16 @@ package net.contrapt.knex.example.service
 
 import net.contrapt.knex.example.model.User
 import net.contrapt.knex.example.repository.UserRepository
-import java.util.*
 
 class LoginService(val repository: UserRepository) {
 
     operator fun invoke(data: Request) : Response {
-        return Response("", "")
+        val user = User()
+        val u = repository.transaction {
+            repository.insert(user)
+            repository.findOne(user.id)
+        }
+        return Response(u?.id.toString(), u?.id.toString())
     }
 
     data class Request(

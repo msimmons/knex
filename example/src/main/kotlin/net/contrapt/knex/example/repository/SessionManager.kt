@@ -4,7 +4,7 @@ import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.Jdbi
 import java.io.Closeable
 
-class Repo(val jdbi: Jdbi) {
+class SessionManager(val jdbi: Jdbi) {
 
     protected val txns = ThreadLocal<Transaction>()
 
@@ -18,6 +18,18 @@ class Repo(val jdbi: Jdbi) {
         when (txn.rollbackOnly) {
             true -> txn.handle.rollback()
             else -> txn.handle.commit()
+        }
+    }
+
+    fun beginTransaction(rollbackOnly: Boolean = false) {
+        beginTxn(rollbackOnly)
+    }
+
+    fun endTransaction() {
+        val txn = txns.get()
+        when (txn) {
+            null -> null
+            else -> endTxn(txn)
         }
     }
 
@@ -55,7 +67,6 @@ class Repo(val jdbi: Jdbi) {
             when (txn) {
                 null -> {}
                 else -> {
-                    println("Closing the txn ${handle}")
                     txns.remove()
                     txn.handle.close()
                 }
